@@ -1,0 +1,12 @@
+# Makefile
+Makefile*
+
+# Objects
+*.o
+*.a
+
+# Qt
+moc_*
+
+# Editor
+*.swp
