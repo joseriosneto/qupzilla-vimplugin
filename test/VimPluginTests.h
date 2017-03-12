@@ -25,6 +25,7 @@ class VimPluginTests : public QObject
 
     private slots:
         void PluginSpecHasCorrectData();
+        void ProcessOnlyONWebViewEvents();
 };
 
 void VimPluginTests::PluginSpecHasCorrectData()
@@ -40,6 +41,12 @@ void VimPluginTests::PluginSpecHasCorrectData()
     spec.author = "Jose Rios <joseriosneto@gmail.com>";
 
     QVERIFY(spec == vim_plugin.pluginSpec());
+}
+
+void VimPluginTests::ProcessOnlyONWebViewEvents()
+{
+    VimPlugin vim_plugin;
+    QVERIFY(!vim_plugin.keyPress(Qz::ON_WebView, nullptr, nullptr));
 }
 
 QTEST_MAIN(VimPluginTests)

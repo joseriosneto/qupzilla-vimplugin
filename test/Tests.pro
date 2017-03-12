@@ -8,6 +8,8 @@ TARGET = VimPluginTests
 
 HEADERS += VimPluginTests.h
 
+SOURCES += ../src/VimPlugin.cpp
+
 # We need QupZilla source
 qupzilla_src_dir = $$(QUPZILLA_SRCDIR)
 equals(qupzilla_src_dir, "") {
@@ -41,3 +43,4 @@ INCLUDEPATH += $$PWD/../include/                       \
 DEPENDPATH += $$INCLUDEPATH               \
               $$qupzilla_src_dir/lib/data \
 
+LIBS += -lQupZilla

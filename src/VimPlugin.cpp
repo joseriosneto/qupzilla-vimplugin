@@ -16,22 +16,30 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ============================================================ */
 
-#ifndef VIMPLUGIN_H
-#define VIMPLUGIN_H
+#include "VimPlugin.h"
+#include <QWebEngineView>
 
-#include "plugininterface.h"
-
-class VimPlugin
+PluginSpec VimPlugin::pluginSpec() const
 {
-    public:
-        explicit VimPlugin() {}
+    PluginSpec spec;
 
-        PluginSpec pluginSpec() const;
-        bool keyPress(const Qz::ObjectName &type, QObject* obj,
-                QKeyEvent* event);
+    spec.name = "Vim plugin";
+    spec.info = "How awesome is Vimium? This plugin try to port its "
+        "functionalities to QupZilla.";
+    spec.description = "Enable vim command set for browsing.";
+    spec.version = "0.0.1";
+    spec.author = "Jose Rios <joseriosneto@gmail.com>";
+    spec.icon = QPixmap(":/vimplugin/data/vim-logo-en.png");
+    spec.hasSettings = false;
 
-    private:
-        QWebEnginePage *m_page;
-};
+    return spec;
+}
 
-#endif
+bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
+        QKeyEvent* event)
+{
+    QWebEngineView *view = qobject_cast<QWebEngineView*>(obj);
+    if (!view)
+        return false;
+    return false;
+}
