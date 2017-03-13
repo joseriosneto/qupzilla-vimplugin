@@ -21,10 +21,14 @@
 
 #include "plugininterface.h"
 
-class VimPlugin
+class VimPlugin : public QObject, public PluginInterface
 {
+    Q_OBJECT
+    Q_INTERFACES(PluginInterface)
+    Q_PLUGIN_METADATA(IID "QupZilla.Browser.plugin.VimPlugin")
+
     public:
-        explicit VimPlugin() {}
+        explicit VimPlugin();
 
         PluginSpec pluginSpec();
         void init(InitState state, const QString &settingsPath);

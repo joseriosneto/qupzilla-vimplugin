@@ -17,8 +17,16 @@
 * ============================================================ */
 
 #include "VimPlugin.h"
+
 #include <QWebEngineView>
 
+#include "mainapplication.h"
+#include "pluginproxy.h"
+
+VimPlugin::VimPlugin()
+    : QObject()
+{
+}
 
 PluginSpec VimPlugin::pluginSpec()
 {
