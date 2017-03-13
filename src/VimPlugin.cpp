@@ -19,7 +19,8 @@
 #include "VimPlugin.h"
 #include <QWebEngineView>
 
-PluginSpec VimPlugin::pluginSpec() const
+
+PluginSpec VimPlugin::pluginSpec()
 {
     PluginSpec spec;
 
@@ -48,6 +49,10 @@ void VimPlugin::init(InitState state, const QString &settingsPath)
 bool VimPlugin::testPlugin()
 {
     return true;
+}
+
+void VimPlugin::unload()
+{
 }
 
 bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
