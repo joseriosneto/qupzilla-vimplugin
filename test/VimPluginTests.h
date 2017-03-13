@@ -26,6 +26,7 @@ class VimPluginTests : public QObject
     private slots:
         void PluginSpecHasCorrectData();
         void ProcessOnlyONWebViewEvents();
+        void LoadPluginOnVersion_2_1_99();
 };
 
 void VimPluginTests::PluginSpecHasCorrectData()
@@ -47,6 +48,12 @@ void VimPluginTests::ProcessOnlyONWebViewEvents()
 {
     VimPlugin vim_plugin;
     QVERIFY(!vim_plugin.keyPress(Qz::ON_WebView, nullptr, nullptr));
+}
+
+void VimPluginTests::LoadPluginOnVersion_2_1_99()
+{
+    VimPlugin vim_plugin;
+    QVERIFY(vim_plugin.testPlugin());
 }
 
 QTEST_MAIN(VimPluginTests)

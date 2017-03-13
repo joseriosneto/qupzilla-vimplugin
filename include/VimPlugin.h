@@ -27,6 +27,8 @@ class VimPlugin
         explicit VimPlugin() {}
 
         PluginSpec pluginSpec() const;
+        bool testPlugin();
+
         bool keyPress(const Qz::ObjectName &type, QObject* obj,
                 QKeyEvent* event);
 

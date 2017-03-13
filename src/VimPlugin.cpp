@@ -35,6 +35,11 @@ PluginSpec VimPlugin::pluginSpec() const
     return spec;
 }
 
+bool VimPlugin::testPlugin()
+{
+    return true;
+}
+
 bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
         QKeyEvent* event)
 {
