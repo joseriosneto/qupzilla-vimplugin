@@ -27,6 +27,7 @@ class VimPlugin
         explicit VimPlugin() {}
 
         PluginSpec pluginSpec() const;
+        void init(InitState state, const QString &settingsPath);
         bool testPlugin();
 
         bool keyPress(const Qz::ObjectName &type, QObject* obj,

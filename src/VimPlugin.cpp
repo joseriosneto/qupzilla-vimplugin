@@ -35,6 +35,16 @@ PluginSpec VimPlugin::pluginSpec() const
     return spec;
 }
 
+void VimPlugin::init(InitState state, const QString &settingsPath)
+{
+    qDebug() << __FUNCTION__ << "called";
+
+    Q_UNUSED(state)
+    Q_UNUSED(settingsPath);
+
+    QZ_REGISTER_EVENT_HANDLER(PluginProxy::KeyPressHandler);
+}
+
 bool VimPlugin::testPlugin()
 {
     return true;
