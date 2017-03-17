@@ -39,6 +39,8 @@ class VimPlugin : public QObject, public PluginInterface
                 QKeyEvent* event);
 
     private:
+        int m_single_step;
+
         QWebEnginePage *m_page;
 };
 

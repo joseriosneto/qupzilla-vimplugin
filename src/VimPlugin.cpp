@@ -22,9 +22,13 @@
 
 #include "mainapplication.h"
 #include "pluginproxy.h"
+#include "webview.h"
+#include "webpage.h"
+
 
 VimPlugin::VimPlugin()
     : QObject()
+    , m_single_step(30)
 {
 }
 
@@ -66,8 +70,11 @@ void VimPlugin::unload()
 bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
         QKeyEvent* event)
 {
-    QWebEngineView *view = qobject_cast<QWebEngineView*>(obj);
+    WebView *view = qobject_cast<WebView *>(obj);
     if (!view)
         return false;
+
+    view->page()->scroll(0, m_single_step);
+
     return false;
 }

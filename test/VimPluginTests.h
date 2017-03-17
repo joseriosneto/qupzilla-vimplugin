@@ -17,16 +17,48 @@
 * ============================================================ */
 
 #include <QtTest/QtTest>
+
 #include "VimPlugin.h"
+
+#include "mainapplication.h"
+#include "browserwindow.h"
+#include "tabbedwebview.h"
+#include "webpage.h"
 
 class VimPluginTests : public QObject
 {
     Q_OBJECT
 
     private slots:
+        void initTestCase()
+        {
+            int argc = 1;
+            static char *s[] = {"VimPluginTests"};
+
+            m_app = new MainApplication(argc, s);
+
+            /* QupZilla has some 'postLaunch' initialization functions that are
+             * posted in event loop queue to be processed on the next(s)
+             * iteration(s). The QTRY_* macros though do not process GUI and
+             * Qwidgets events since it use QCoreApplication for processing
+             * this. We need then to run a GUI event loop here to correctly
+             * initialize application.
+             */
+            QTestEventLoop::instance().enterLoop(1);
+        }
+
+        void cleanupTestCase()
+        {
+            delete m_app;
+        }
+
         void PluginSpecHasCorrectData();
         void ProcessOnlyONWebViewEvents();
         void LoadPluginOnVersion_2_1_99();
+        void KeyJScrollDownSingleStep();
+
+    private:
+        MainApplication *m_app;
 };
 
 void VimPluginTests::PluginSpecHasCorrectData()
@@ -56,4 +88,31 @@ void VimPluginTests::LoadPluginOnVersion_2_1_99()
     QVERIFY(vim_plugin.testPlugin());
 }
 
-QTEST_MAIN(VimPluginTests)
+void VimPluginTests::KeyJScrollDownSingleStep()
+{
+   QTRY_VERIFY(m_app->getWindow());
+   BrowserWindow *window = m_app->getWindow();
+
+   QTRY_VERIFY(window->weView());
+   TabbedWebView *view = window->weView();
+
+   view->show();
+   QTest::qWaitForWindowExposed(view);
+
+   QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
+   view->load(QUrl("file:///" + QDir::currentPath() + "/pages/long_page.html"));
+   QTRY_COMPARE(loadSpy.count(), 1);
+
+   view->page()->runJavaScript("window.scrollTo(0, 100);");
+   QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
+   QCOMPARE(view->page()->scrollPosition().x(), qreal(0));
+
+   QTest::keyPress(view->parentWidget(), Qt::Key_J, Qt::NoModifier);
+   QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(130));
+   QCOMPARE(view->page()->scrollPosition().x(), qreal(0));
+}
+
+/* Using "APPLESS" version because MainApplication is already a QApplication
+ * and it was not coping well with QTEST_MAIN.
+ */
+QTEST_APPLESS_MAIN(VimPluginTests)
