@@ -38,6 +38,11 @@ class VimPlugin : public QObject, public PluginInterface
         bool keyPress(const Qz::ObjectName &type, QObject* obj,
                 QKeyEvent* event);
 
+        int singleStepSize() const
+        {
+            return m_single_step;
+        }
+
     private:
         int m_single_step;
 

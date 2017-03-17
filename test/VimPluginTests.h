@@ -55,7 +55,9 @@ class VimPluginTests : public QObject
         void PluginSpecHasCorrectData();
         void ProcessOnlyONWebViewEvents();
         void LoadPluginOnVersion_2_1_99();
-        void KeyJScrollDownSingleStep();
+
+        void ScrollNavigationWithHJKL_data();
+        void ScrollNavigationWithHJKL();
 
     private:
         MainApplication *m_app;
@@ -88,28 +90,52 @@ void VimPluginTests::LoadPluginOnVersion_2_1_99()
     QVERIFY(vim_plugin.testPlugin());
 }
 
-void VimPluginTests::KeyJScrollDownSingleStep()
+void VimPluginTests::ScrollNavigationWithHJKL_data()
 {
-   QTRY_VERIFY(m_app->getWindow());
-   BrowserWindow *window = m_app->getWindow();
+    QTest::addColumn<QTestEventList>("key_event");
+    QTest::addColumn<QPointF>("expected_pos");
 
-   QTRY_VERIFY(window->weView());
-   TabbedWebView *view = window->weView();
+    VimPlugin vim_plugin;
+    int initial_x = 100;
+    int initial_y = 100;
 
-   view->show();
-   QTest::qWaitForWindowExposed(view);
+    QTestEventList key_j_scroll_down;
+    key_j_scroll_down.addKeyClick(Qt::Key_J);
+    QTest::newRow("scroll down on 'j'") << key_j_scroll_down
+        << QPointF(initial_x, initial_y + vim_plugin.singleStepSize());
 
-   QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
-   view->load(QUrl("file:///" + QDir::currentPath() + "/pages/long_page.html"));
-   QTRY_COMPARE(loadSpy.count(), 1);
+    QTestEventList key_k_scroll_up;
+    key_k_scroll_up.addKeyClick(Qt::Key_K);
+    QTest::newRow("scroll up on 'k'") << key_k_scroll_up
+        << QPointF(initial_x, initial_y - vim_plugin.singleStepSize());
+}
 
-   view->page()->runJavaScript("window.scrollTo(0, 100);");
-   QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
-   QCOMPARE(view->page()->scrollPosition().x(), qreal(0));
+void VimPluginTests::ScrollNavigationWithHJKL()
+{
+    QFETCH(QTestEventList, key_event);
+    QFETCH(QPointF, expected_pos);
 
-   QTest::keyPress(view->parentWidget(), Qt::Key_J, Qt::NoModifier);
-   QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(130));
-   QCOMPARE(view->page()->scrollPosition().x(), qreal(0));
+    QTRY_VERIFY(m_app->getWindow());
+    BrowserWindow *window = m_app->getWindow();
+
+    QTRY_VERIFY(window->weView());
+    TabbedWebView *view = window->weView();
+
+    view->show();
+    QTest::qWaitForWindowExposed(view);
+
+    QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
+    view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
+                + "/pages/long_large.html"));
+    QTRY_COMPARE(loadSpy.count(), 1);
+
+    view->page()->runJavaScript("window.scrollTo(100, 100);");
+    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
+    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
+
+    key_event.simulate(view->parentWidget());
+    QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
+    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
