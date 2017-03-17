@@ -85,5 +85,8 @@ bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
     if (Qt::Key_K == event->key())
         view->page()->scroll(0, -1 * m_single_step);
 
+    if (Qt::Key_L == event->key())
+        view->page()->scroll(m_single_step, 0);
+
     return false;
 }

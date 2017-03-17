@@ -115,6 +115,11 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
     key_k_scroll_up.addKeyClick(Qt::Key_K);
     QTest::newRow("scroll up on 'k'") << key_k_scroll_up
         << QPointF(initial_x, initial_y - vim_plugin.singleStepSize());
+
+    QTestEventList key_l_scroll_right;
+    key_l_scroll_right.addKeyClick(Qt::Key_L);
+    QTest::newRow("scroll right on 'l'") << key_l_scroll_right
+        << QPointF(initial_x + vim_plugin.singleStepSize(), initial_y);
 }
 
 void VimPluginTests::ScrollNavigationWithHJKL()
