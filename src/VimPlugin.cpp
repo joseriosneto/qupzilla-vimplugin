@@ -70,6 +70,8 @@ void VimPlugin::unload()
 bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
         QKeyEvent* event)
 {
+    Q_UNUSED(type)
+
     WebView *view = qobject_cast<WebView *>(obj);
     if (!view)
         return false;

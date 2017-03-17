@@ -33,9 +33,11 @@ class VimPluginTests : public QObject
         void initTestCase()
         {
             int argc = 1;
-            static char *s[] = {"VimPluginTests"};
+            char *argv[argc];
 
-            m_app = new MainApplication(argc, s);
+            argv[0] =
+                ((QByteArray) QString("VimPluginTests").toLatin1()).data();
+            m_app = new MainApplication(argc, argv);
 
             /* QupZilla has some 'postLaunch' initialization functions that are
              * posted in event loop queue to be processed on the next(s)
