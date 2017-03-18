@@ -67,6 +67,24 @@ class VimPluginTests : public QObject
         void ScrollToBottomWithCapitalG();
 
     private:
+        void loadTestPage(const QString &url, WebView **view)
+        {
+            QTRY_VERIFY(m_app->getWindow());
+            BrowserWindow *window = m_app->getWindow();
+
+            QTRY_VERIFY(window->weView());
+            TabbedWebView *tab_view = window->weView();
+
+            tab_view->show();
+            QTest::qWaitForWindowExposed(tab_view);
+
+            QSignalSpy loadSpy(tab_view->page(), SIGNAL(loadFinished(bool)));
+            tab_view->load(QUrl(url));
+            QTRY_COMPARE(loadSpy.count(), 1);
+
+            (*view) = tab_view;
+        }
+
         /* This code is borrowed from 'execJavaScript' of QupZilla. */
         QVariant getElementAttrValue(WebPage *page, const QString& element)
         {
@@ -154,19 +172,11 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     QFETCH(QTestEventList, key_event);
     QFETCH(QPointF, expected_pos);
 
-    QTRY_VERIFY(m_app->getWindow());
-    BrowserWindow *window = m_app->getWindow();
+    WebView *view = nullptr;
+    QString test_page("file:///" + QCoreApplication::applicationDirPath()
+            + "/pages/long_page_w5000px_h5000px.html");
 
-    QTRY_VERIFY(window->weView());
-    TabbedWebView *view = window->weView();
-
-    view->show();
-    QTest::qWaitForWindowExposed(view);
-
-    QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
-    view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
-                + "/pages/long_page_w5000px_h5000px.html"));
-    QTRY_COMPARE(loadSpy.count(), 1);
+    loadTestPage(test_page, &view);
 
     view->page()->runJavaScript("window.scrollTo(100, 100);");
     QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
@@ -205,19 +215,11 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
     QFETCH(QTestEventList, key_event);
     QFETCH(QPointF, expected_pos);
 
-    QTRY_VERIFY(m_app->getWindow());
-    BrowserWindow *window = m_app->getWindow();
+    WebView *view = nullptr;
+    QString test_page("file:///" + QCoreApplication::applicationDirPath()
+            + "/pages/long_page_w5000px_h5000px.html");
 
-    QTRY_VERIFY(window->weView());
-    TabbedWebView *view = window->weView();
-
-    view->show();
-    QTest::qWaitForWindowExposed(view);
-
-    QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
-    view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
-                + "/pages/long_page_w5000px_h5000px.html"));
-    QTRY_COMPARE(loadSpy.count(), 1);
+    loadTestPage(test_page, &view);
 
     view->page()->runJavaScript("window.scrollTo(0, 500);");
     QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
@@ -230,19 +232,11 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
 
 void VimPluginTests::ScrollToBottomWithCapitalG()
 {
-    QTRY_VERIFY(m_app->getWindow());
-    BrowserWindow *window = m_app->getWindow();
+    WebView *view = nullptr;
+    QString test_page("file:///" + QCoreApplication::applicationDirPath()
+            + "/pages/long_page_w5000px_h5000px.html");
 
-    QTRY_VERIFY(window->weView());
-    TabbedWebView *view = window->weView();
-
-    view->show();
-    QTest::qWaitForWindowExposed(view);
-
-    QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
-    view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
-                + "/pages/long_page_w5000px_h5000px.html"));
-    QTRY_COMPARE(loadSpy.count(), 1);
+    loadTestPage(test_page, &view);
 
     view->page()->runJavaScript("window.scrollTo(0, 0);");
     QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
