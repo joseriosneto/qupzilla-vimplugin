@@ -64,7 +64,31 @@ class VimPluginTests : public QObject
         void ScrollToTopWithDoubleLowerCaseG_data();
         void ScrollToTopWithDoubleLowerCaseG();
 
+        void ScrollToBottomWithCapitalG();
+
     private:
+        /* This code is borrowed from 'execJavaScript' of QupZilla. */
+        QVariant getElementAttrValue(WebPage *page, const QString& element)
+        {
+            QPointer<QEventLoop> loop = new QEventLoop;
+            QVariant value = -1;
+
+            QTimer::singleShot(500, loop.data(), &QEventLoop::quit);
+
+            page->runJavaScript(element, [loop, &value] (const QVariant& res) {
+                if (loop && loop->isRunning()) {
+                    value = res;
+                    loop->quit();
+                }
+            });
+
+            loop->exec(QEventLoop::ExcludeUserInputEvents
+                    | QEventLoop::ExcludeSocketNotifiers);
+            delete loop;
+
+            return value;
+        }
+
         MainApplication *m_app;
 };
 
@@ -202,6 +226,44 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
     key_event.simulate(view->parentWidget());
     QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
     QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
+}
+
+void VimPluginTests::ScrollToBottomWithCapitalG()
+{
+    QTRY_VERIFY(m_app->getWindow());
+    BrowserWindow *window = m_app->getWindow();
+
+    QTRY_VERIFY(window->weView());
+    TabbedWebView *view = window->weView();
+
+    view->show();
+    QTest::qWaitForWindowExposed(view);
+
+    QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
+    view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
+                + "/pages/long_page_w5000px_h5000px.html"));
+    QTRY_COMPARE(loadSpy.count(), 1);
+
+    view->page()->runJavaScript("window.scrollTo(0, 0);");
+    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
+    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(0));
+
+    qreal client_height = getElementAttrValue(view->page(),
+            "document.body.clientHeight;").toReal();
+    qreal scroll_height = getElementAttrValue(view->page(),
+            "document.body.scrollHeight;").toReal();
+    qreal scroll_top = getElementAttrValue(view->page(),
+            "document.body.scrollTop;").toReal();
+
+    QVERIFY(scroll_height != scroll_top + client_height);
+
+    QTest::keyClick(view->parentWidget(), 'G');
+    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
+
+    scroll_top = getElementAttrValue(view->page(),
+            "document.body.scrollTop;").toReal();
+
+    QVERIFY(scroll_height == scroll_top + client_height);
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
