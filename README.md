@@ -10,4 +10,4 @@ Then you can compile by running these commands:
 
     $ qmake
     $ make
-
+    $ sudo make install
