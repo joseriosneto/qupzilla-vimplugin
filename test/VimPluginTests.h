@@ -61,6 +61,8 @@ class VimPluginTests : public QObject
         void ScrollNavigationWithHJKL_data();
         void ScrollNavigationWithHJKL();
 
+        void ScrollToTopWhenUserPressLowerCaseGTwice();
+
     private:
         MainApplication *m_app;
 };
@@ -148,6 +150,31 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     key_event.simulate(view->parentWidget());
     QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
     QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
+}
+
+void VimPluginTests::ScrollToTopWhenUserPressLowerCaseGTwice()
+{
+    QTRY_VERIFY(m_app->getWindow());
+    BrowserWindow *window = m_app->getWindow();
+
+    QTRY_VERIFY(window->weView());
+    TabbedWebView *view = window->weView();
+
+    view->show();
+    QTest::qWaitForWindowExposed(view);
+
+    QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
+    view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
+                + "/pages/long_large.html"));
+    QTRY_COMPARE(loadSpy.count(), 1);
+
+    view->page()->runJavaScript("window.scrollTo(0, 500);");
+    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(500));
+    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
+
+    QTest::keyClicks(view->parentWidget(), "gg");
+    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
+    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(0));
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication

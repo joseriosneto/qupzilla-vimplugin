@@ -16,36 +16,46 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ============================================================ */
 
-#ifndef VIMPLUGIN_H
-#define VIMPLUGIN_H
-
-#include "plugininterface.h"
 #include "VimEngine.h"
 
-class VimPlugin : public QObject, public PluginInterface
+VimEngine::VimEngine()
+    : m_single_step(30)
+    , m_g_pressed(false)
 {
-    Q_OBJECT
-    Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "QupZilla.Browser.plugin.VimPlugin")
+}
 
-    public:
-        explicit VimPlugin();
+void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
+{
+    Q_ASSERT(page);
+    Q_ASSERT(event);
 
-        PluginSpec pluginSpec();
-        void init(InitState state, const QString &settingsPath);
-        bool testPlugin();
-        void unload();
+    if (Qt::Key_H == event->key()) {
+        page->scroll(-1 * m_single_step, 0);
+        return;
+    }
 
-        bool keyPress(const Qz::ObjectName &type, QObject* obj,
-                QKeyEvent* event);
+    if (Qt::Key_J == event->key()) {
+        page->scroll(0, m_single_step);
+        return;
+    }
 
-        int singleStepSize() const
-        {
-            return m_vim_engine.stepSize();
+    if (Qt::Key_K == event->key()) {
+        page->scroll(0, -1 * m_single_step);
+        return;
+    }
+
+    if (Qt::Key_L == event->key()) {
+        page->scroll(m_single_step, 0);
+        return;
+    }
+
+    if ("g" == event->text()) {
+        if (!m_g_pressed) {
+            m_g_pressed = true;
+            return;
         }
-
-    private:
-        VimEngine m_vim_engine;
-};
-
-#endif
+        page->runJavaScript("window.scrollTo(0, 0)");
+        m_g_pressed = false;
+        return;
+    }
+}

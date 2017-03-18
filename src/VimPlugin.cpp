@@ -28,7 +28,6 @@
 
 VimPlugin::VimPlugin()
     : QObject()
-    , m_single_step(30)
 {
 }
 
@@ -76,26 +75,7 @@ bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
     if (!view)
         return false;
 
-    if (Qt::Key_H == event->key()) {
-        view->page()->scroll(-1 * m_single_step, 0);
-        goto end;
-    }
+    m_vim_engine.handleKeyEvent(view->page(), event);
 
-    if (Qt::Key_J == event->key()) {
-        view->page()->scroll(0, m_single_step);
-        goto end;
-    }
-
-    if (Qt::Key_K == event->key()) {
-        view->page()->scroll(0, -1 * m_single_step);
-        goto end;
-    }
-
-    if (Qt::Key_L == event->key()) {
-        view->page()->scroll(m_single_step, 0);
-        goto end;
-    }
-
-end:
     return false;
 }

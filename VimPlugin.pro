@@ -18,9 +18,11 @@ OBJECTS_DIR = build
 MOC_DIR = build
 RCC_DIR = build
 
-HEADERS += include/VimPlugin.h
+HEADERS += include/VimPlugin.h \
+           include/VimEngine.h
 
-SOURCES += src/VimPlugin.cpp
+SOURCES += src/VimPlugin.cpp \
+           src/VimEngine.cpp
 
 RESOURCES += vimplugin.qrc
 

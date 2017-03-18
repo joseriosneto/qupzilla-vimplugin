@@ -16,36 +16,27 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ============================================================ */
 
-#ifndef VIMPLUGIN_H
-#define VIMPLUGIN_H
+#ifndef VIM_ENGINE_H
+#define VIM_ENGINE_H
 
-#include "plugininterface.h"
-#include "VimEngine.h"
+#include "webpage.h"
+#include <QKeyEvent>
 
-class VimPlugin : public QObject, public PluginInterface
+class VimEngine
 {
-    Q_OBJECT
-    Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "QupZilla.Browser.plugin.VimPlugin")
-
     public:
-        explicit VimPlugin();
+        explicit VimEngine();
 
-        PluginSpec pluginSpec();
-        void init(InitState state, const QString &settingsPath);
-        bool testPlugin();
-        void unload();
-
-        bool keyPress(const Qz::ObjectName &type, QObject* obj,
-                QKeyEvent* event);
-
-        int singleStepSize() const
+        int stepSize() const
         {
-            return m_vim_engine.stepSize();
+            return m_single_step;
         }
 
+        void handleKeyEvent(WebPage *page, QKeyEvent *event);
+
     private:
-        VimEngine m_vim_engine;
+        int m_single_step;
+        bool m_g_pressed;
 };
 
 #endif

@@ -12,8 +12,10 @@ RCC_DIR = ../build
 
 HEADERS += VimPluginTests.h \
            ../include/VimPlugin.h \
+           ../include/VimEngine.h
 
-SOURCES += ../src/VimPlugin.cpp
+SOURCES += ../src/VimPlugin.cpp \
+           ../src/VimEngine.cpp
 
 # We need QupZilla source
 qupzilla_src_dir = $$(QUPZILLA_SRCDIR)
