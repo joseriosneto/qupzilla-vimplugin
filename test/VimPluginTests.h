@@ -141,7 +141,7 @@ void VimPluginTests::ScrollNavigationWithHJKL()
 
     QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
     view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
-                + "/pages/long_large.html"));
+                + "/pages/long_page_w5000px_h5000px.html"));
     QTRY_COMPARE(loadSpy.count(), 1);
 
     view->page()->runJavaScript("window.scrollTo(100, 100);");
@@ -192,7 +192,7 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
 
     QSignalSpy loadSpy(view->page(), SIGNAL(loadFinished(bool)));
     view->load(QUrl("file:///" + QCoreApplication::applicationDirPath()
-                + "/pages/long_large.html"));
+                + "/pages/long_page_w5000px_h5000px.html"));
     QTRY_COMPARE(loadSpy.count(), 1);
 
     view->page()->runJavaScript("window.scrollTo(0, 500);");
