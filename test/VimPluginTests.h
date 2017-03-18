@@ -206,7 +206,7 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
 
     QTestEventList keys_gag_dont_scroll_top;
     keys_gag_dont_scroll_top.addKeyClicks("gag");
-    QTest::newRow("dont scroll to top with 'gag' (non vim key between 'g'")
+    QTest::newRow("dont scroll to top with 'gag' (non vim key between 'g's")
         << keys_gag_dont_scroll_top << QPointF(0, 500);
 }
 
