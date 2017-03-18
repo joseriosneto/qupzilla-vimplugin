@@ -31,22 +31,22 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
 
     if (Qt::Key_H == event->key()) {
         page->scroll(-1 * m_single_step, 0);
-        return;
+        goto end;
     }
 
     if (Qt::Key_J == event->key()) {
         page->scroll(0, m_single_step);
-        return;
+        goto end;
     }
 
     if (Qt::Key_K == event->key()) {
         page->scroll(0, -1 * m_single_step);
-        return;
+        goto end;
     }
 
     if (Qt::Key_L == event->key()) {
         page->scroll(m_single_step, 0);
-        return;
+        goto end;
     }
 
     if ("g" == event->text()) {
@@ -55,7 +55,10 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
             return;
         }
         page->runJavaScript("window.scrollTo(0, 0)");
-        m_g_pressed = false;
-        return;
+        goto end;
     }
+
+end:
+    m_g_pressed = false;
+    return;
 }

@@ -61,7 +61,8 @@ class VimPluginTests : public QObject
         void ScrollNavigationWithHJKL_data();
         void ScrollNavigationWithHJKL();
 
-        void ScrollToTopWhenUserPressLowerCaseGTwice();
+        void ScrollToTopWithDoubleLowerCaseG_data();
+        void ScrollToTopWithDoubleLowerCaseG();
 
     private:
         MainApplication *m_app;
@@ -152,8 +153,34 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
 }
 
-void VimPluginTests::ScrollToTopWhenUserPressLowerCaseGTwice()
+void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
 {
+    QTest::addColumn<QTestEventList>("key_event");
+    QTest::addColumn<QPointF>("expected_pos");
+
+    /* Initial position: (x = 0, y = 500) */
+
+    QTestEventList keys_gg_scroll_top;
+    keys_gg_scroll_top.addKeyClicks("gg");
+    QTest::newRow("scroll to top on 'gg'") << keys_gg_scroll_top
+        << QPointF(0, 0);
+
+    QTestEventList keys_gjg_dont_scroll_top;
+    keys_gjg_dont_scroll_top.addKeyClicks("gjg");
+    QTest::newRow("dont scroll to top with 'gjg' (vim key between 'g's")
+        << keys_gjg_dont_scroll_top << QPointF(0, 500);
+
+    QTestEventList keys_gag_dont_scroll_top;
+    keys_gag_dont_scroll_top.addKeyClicks("gag");
+    QTest::newRow("dont scroll to top with 'gag' (non vim key between 'g'")
+        << keys_gag_dont_scroll_top << QPointF(0, 500);
+}
+
+void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
+{
+    QFETCH(QTestEventList, key_event);
+    QFETCH(QPointF, expected_pos);
+
     QTRY_VERIFY(m_app->getWindow());
     BrowserWindow *window = m_app->getWindow();
 
@@ -169,12 +196,12 @@ void VimPluginTests::ScrollToTopWhenUserPressLowerCaseGTwice()
     QTRY_COMPARE(loadSpy.count(), 1);
 
     view->page()->runJavaScript("window.scrollTo(0, 500);");
+    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
     QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(500));
-    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
 
-    QTest::keyClicks(view->parentWidget(), "gg");
-    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(0));
-    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(0));
+    key_event.simulate(view->parentWidget());
+    QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
+    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
