@@ -29,6 +29,8 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
     Q_ASSERT(page);
     Q_ASSERT(event);
 
+    const QPointF cur_scroll_pos = page->scrollPosition();
+
     if (Qt::Key_H == event->key()) {
         page->scroll(-1 * m_single_step, 0);
         goto end;
@@ -50,7 +52,9 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
     }
 
     if ("G" == event->text()) {
-        page->runJavaScript("window.scrollTo(0, document.body.scrollHeight);");
+        page->runJavaScript(
+                QString("window.scrollTo(%1, document.body.scrollHeight);")
+                .arg(cur_scroll_pos.x()));
         goto end;
     }
 
@@ -59,7 +63,8 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
             m_g_pressed = true;
             return;
         }
-        page->runJavaScript("window.scrollTo(0, 0)");
+        page->runJavaScript(QString("window.scrollTo(%1, 0)")
+                .arg(cur_scroll_pos.x()));
         goto end;
     }
 
