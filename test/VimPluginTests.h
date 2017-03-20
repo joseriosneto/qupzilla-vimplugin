@@ -67,6 +67,7 @@ class VimPluginTests : public QObject
         void ScrollToBottomWithCapitalG();
 
         void ScrollHalfViewportUpWithLowerCaseU();
+        void ScrollHalfViewportDownWithLowerCaseD();
 
     private:
         void loadTestPage(const QString &url, WebView **view)
@@ -313,6 +314,32 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
     qreal expected_y = initial_y - (window_inner_height / 2);
 
     QTest::keyClick(view->parentWidget(), 'u');
+    processEvents();
+    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_y);
+}
+
+void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
+{
+    WebView *view = nullptr;
+    QString test_page("file:///" + QCoreApplication::applicationDirPath()
+            + "/pages/long_page_w5000px_h5000px.html");
+
+    loadTestPage(test_page, &view);
+
+    qreal initial_x = 200;
+    qreal initial_y = 1000;
+
+    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+            .arg(initial_x).arg(initial_y));
+    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+
+    qreal window_inner_height = getElementAttrValue(view->page(),
+            "window.innerHeight;").toReal();
+    qreal expected_y = initial_y + (window_inner_height / 2);
+
+    QTest::keyClick(view->parentWidget(), 'd');
     processEvents();
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(), expected_y);
