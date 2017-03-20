@@ -58,6 +58,13 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
         goto end;
     }
 
+    if ("u" == event->text()) {
+        page->runJavaScript(
+                QString("window.scrollTo(%1, %2 - (window.innerHeight / 2));")
+                .arg(cur_scroll_pos.x()).arg(cur_scroll_pos.y()));
+        goto end;
+    }
+
     if ("g" == event->text()) {
         if (!m_g_pressed) {
             m_g_pressed = true;
