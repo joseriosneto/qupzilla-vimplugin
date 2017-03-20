@@ -109,7 +109,7 @@ class VimPluginTests : public QObject
             return value;
         }
 
-        void processEvents(int ms_maxtime = 200)
+        void processEvents(int ms_maxtime = 50)
         {
             QEventLoop loop;
             QTimer::singleShot(ms_maxtime, &loop, &QEventLoop::quit);
