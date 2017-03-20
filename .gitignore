@@ -2,11 +2,15 @@
 Makefile*
 
 # Objects
+build*
 *.o
 *.a
+test/VimPluginTests
 
 # Qt
+.qmake*
 moc_*
 
 # Editor
+tags
 *.swp
