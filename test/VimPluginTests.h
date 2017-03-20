@@ -186,10 +186,11 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     loadTestPage(test_page, &view);
 
     view->page()->runJavaScript("window.scrollTo(100, 100);");
-    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
     QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
+    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
 
     key_event.simulate(view->parentWidget());
+    processEvents();
     QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
     QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
 }
