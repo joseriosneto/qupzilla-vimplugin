@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/vimplugin">
+        <file>data/vim-logo-en.png</file>
+    </qresource>
+</RCC>
