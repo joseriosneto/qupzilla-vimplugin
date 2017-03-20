@@ -31,22 +31,22 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
 
     const QPointF cur_scroll_pos = page->scrollPosition();
 
-    if (Qt::Key_H == event->key()) {
+    if ("h" == event->text()) {
         page->scroll(-1 * m_single_step, 0);
         goto end;
     }
 
-    if (Qt::Key_J == event->key()) {
+    if ("j" == event->text()) {
         page->scroll(0, m_single_step);
         goto end;
     }
 
-    if (Qt::Key_K == event->key()) {
+    if ("k" == event->text()) {
         page->scroll(0, -1 * m_single_step);
         goto end;
     }
 
-    if (Qt::Key_L == event->key()) {
+    if ("l" == event->text()) {
         page->scroll(m_single_step, 0);
         goto end;
     }

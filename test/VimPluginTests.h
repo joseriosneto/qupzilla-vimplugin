@@ -154,24 +154,44 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
     int initial_y = 100;
 
     QTestEventList key_h_scroll_left;
-    key_h_scroll_left.addKeyClick(Qt::Key_H);
+    key_h_scroll_left.addKeyClicks("h");
     QTest::newRow("scroll left on 'h'") << key_h_scroll_left
         << QPointF(initial_x - vim_plugin.singleStepSize(), initial_y);
 
+    QTestEventList key_H_dont_scroll;
+    key_H_dont_scroll.addKeyClicks("H");
+    QTest::newRow("dont scroll left on 'H'") << key_H_dont_scroll
+        << QPointF(initial_x, initial_y);
+
     QTestEventList key_j_scroll_down;
-    key_j_scroll_down.addKeyClick(Qt::Key_J);
+    key_j_scroll_down.addKeyClicks("j");
     QTest::newRow("scroll down on 'j'") << key_j_scroll_down
         << QPointF(initial_x, initial_y + vim_plugin.singleStepSize());
 
+    QTestEventList key_J_dont_scroll;
+    key_J_dont_scroll.addKeyClicks("J");
+    QTest::newRow("dont scroll down on 'J'") << key_J_dont_scroll
+        << QPointF(initial_x, initial_y);
+
     QTestEventList key_k_scroll_up;
-    key_k_scroll_up.addKeyClick(Qt::Key_K);
+    key_k_scroll_up.addKeyClicks("k");
     QTest::newRow("scroll up on 'k'") << key_k_scroll_up
         << QPointF(initial_x, initial_y - vim_plugin.singleStepSize());
 
+    QTestEventList key_K_dont_scroll;
+    key_K_dont_scroll.addKeyClicks("K");
+    QTest::newRow("dont scroll up on 'K'") << key_K_dont_scroll
+        << QPointF(initial_x, initial_y);
+
     QTestEventList key_l_scroll_right;
-    key_l_scroll_right.addKeyClick(Qt::Key_L);
+    key_l_scroll_right.addKeyClicks("l");
     QTest::newRow("scroll right on 'l'") << key_l_scroll_right
         << QPointF(initial_x + vim_plugin.singleStepSize(), initial_y);
+
+    QTestEventList key_L_dont_scroll;
+    key_L_dont_scroll.addKeyClicks("L");
+    QTest::newRow("dont scroll right on 'L'") << key_L_dont_scroll
+        << QPointF(initial_x, initial_y);
 }
 
 void VimPluginTests::ScrollNavigationWithHJKL()
