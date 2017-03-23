@@ -88,28 +88,6 @@ class VimPluginTests : public QObject
             (*view) = tab_view;
         }
 
-        /* This code is borrowed from 'execJavaScript' of QupZilla. */
-        QVariant getElementAttrValue(WebPage *page, const QString& element)
-        {
-            QPointer<QEventLoop> loop = new QEventLoop;
-            QVariant value = -1;
-
-            QTimer::singleShot(500, loop.data(), &QEventLoop::quit);
-
-            page->runJavaScript(element, [loop, &value] (const QVariant& res) {
-                if (loop && loop->isRunning()) {
-                    value = res;
-                    loop->quit();
-                }
-            });
-
-            loop->exec(QEventLoop::ExcludeUserInputEvents
-                    | QEventLoop::ExcludeSocketNotifiers);
-            delete loop;
-
-            return value;
-        }
-
         void processEvents(int ms_maxtime = 50)
         {
             QEventLoop loop;
@@ -275,11 +253,11 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
     QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
     QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(0));
 
-    qreal client_height = getElementAttrValue(view->page(),
+    qreal client_height = view->page()->execJavaScript(
             "document.body.clientHeight;").toReal();
-    qreal scroll_height = getElementAttrValue(view->page(),
+    qreal scroll_height = view->page()->execJavaScript(
             "document.body.scrollHeight;").toReal();
-    qreal scroll_top = getElementAttrValue(view->page(),
+    qreal scroll_top = view->page()->execJavaScript(
             "document.body.scrollTop;").toReal();
 
     QVERIFY(scroll_height != scroll_top + client_height);
@@ -288,7 +266,7 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
     processEvents();
     QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
 
-    scroll_top = getElementAttrValue(view->page(),
+    scroll_top = view->page()->execJavaScript(
             "document.body.scrollTop;").toReal();
     QVERIFY(scroll_height == scroll_top + client_height);
 }
@@ -309,7 +287,7 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
-    qreal window_inner_height = getElementAttrValue(view->page(),
+    qreal window_inner_height = view->page()->execJavaScript(
             "window.innerHeight;").toReal();
     qreal expected_y = initial_y - (window_inner_height / 2);
 
@@ -335,7 +313,7 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
-    qreal window_inner_height = getElementAttrValue(view->page(),
+    qreal window_inner_height = view->page()->execJavaScript(
             "window.innerHeight;").toReal();
     qreal expected_y = initial_y + (window_inner_height / 2);
 
