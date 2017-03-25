@@ -19,6 +19,7 @@
 #include "VimEngine.h"
 
 int VimEngine::m_single_step = 18;
+int VimEngine::m_single_step_interval = 20;
 
 VimEngine::VimEngine()
     : m_g_pressed(false)
@@ -28,7 +29,7 @@ VimEngine::VimEngine()
     , m_scroll_timer()
     , m_page(nullptr)
 {
-    m_scroll_timer.setInterval(20);
+    m_scroll_timer.setInterval(m_single_step_interval);
     connect(&m_scroll_timer, SIGNAL(timeout()), this, SLOT(scroll()));
 }
 

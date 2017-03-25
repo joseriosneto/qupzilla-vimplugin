@@ -218,7 +218,7 @@ void VimPluginTests::ScrollSmoothlyWithHJKL()
 
     QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     QTest::keyPress(view->parentWidget(), 'j');
-    processEvents(110);
+    processEvents((5 * VimEngine::stepsInterval()) + 10);
     QTest::keyRelease(view->parentWidget(), 'j');
     QTRY_COMPARE(spy.count(), 5);
 }

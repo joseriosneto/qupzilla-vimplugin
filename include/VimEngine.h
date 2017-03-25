@@ -45,6 +45,11 @@ class VimEngine : public QObject
         {
             return m_single_step;
         }
+
+        static int stepsInterval()
+        {
+            return m_single_step_interval;
+        }
 #endif
 
     private slots:
@@ -52,6 +57,7 @@ class VimEngine : public QObject
 
     private:
         static int m_single_step;
+        static int m_single_step_interval;
         bool m_g_pressed;
         bool m_scroll_active;
         int m_scroll_hor;
