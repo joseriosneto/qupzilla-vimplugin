@@ -18,13 +18,21 @@
 
 #include "VimEngine.h"
 
+int VimEngine::m_single_step = 18;
+
 VimEngine::VimEngine()
-    : m_single_step(30)
-    , m_g_pressed(false)
+    : m_g_pressed(false)
+    , m_scroll_active(false)
+    , m_scroll_hor(0)
+    , m_scroll_vert(0)
+    , m_scroll_timer()
+    , m_page(nullptr)
 {
+    m_scroll_timer.setInterval(20);
+    connect(&m_scroll_timer, SIGNAL(timeout()), this, SLOT(scroll()));
 }
 
-void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
+void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
 {
     Q_ASSERT(page);
     Q_ASSERT(event);
@@ -32,22 +40,22 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
     const QPointF cur_scroll_pos = page->scrollPosition();
 
     if ("h" == event->text()) {
-        page->scroll(-1 * m_single_step, 0);
+        startScroll(-1 * m_single_step, 0);
         goto end;
     }
 
     if ("j" == event->text()) {
-        page->scroll(0, m_single_step);
+        startScroll(0, m_single_step);
         goto end;
     }
 
     if ("k" == event->text()) {
-        page->scroll(0, -1 * m_single_step);
+        startScroll(0, -1 * m_single_step);
         goto end;
     }
 
     if ("l" == event->text()) {
-        page->scroll(m_single_step, 0);
+        startScroll(m_single_step, 0);
         goto end;
     }
 
@@ -83,6 +91,52 @@ void VimEngine::handleKeyEvent(WebPage *page, QKeyEvent *event)
     }
 
 end:
+    m_page = page;
     m_g_pressed = false;
     return;
+}
+
+void VimEngine::handleKeyReleaseEvent(WebPage *page, QKeyEvent *event)
+{
+    Q_UNUSED(page);
+
+    if ("h" == event->text()) {
+        m_scroll_active = false;
+        return;
+    }
+
+    if ("j" == event->text()) {
+        m_scroll_active = false;
+        return;
+    }
+
+    if ("k" == event->text()) {
+        m_scroll_active = false;
+        return;
+    }
+
+    if ("l" == event->text()) {
+        m_scroll_active = false;
+        return;
+    }
+}
+
+void VimEngine::startScroll(int scroll_hor, int scroll_vert)
+{
+    m_scroll_hor = scroll_hor;
+    m_scroll_vert = scroll_vert;
+    if (!m_scroll_active) {
+        m_scroll_active = true;
+        m_scroll_timer.start();
+    }
+}
+
+void VimEngine::scroll()
+{
+    m_page->scroll(m_scroll_hor, m_scroll_vert);
+    if (!m_scroll_active) {
+        m_scroll_hor = 0;
+        m_scroll_vert = 0;
+        m_scroll_timer.stop();
+    }
 }

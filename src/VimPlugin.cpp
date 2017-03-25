@@ -55,6 +55,7 @@ void VimPlugin::init(InitState state, const QString &settingsPath)
     Q_UNUSED(settingsPath);
 
     QZ_REGISTER_EVENT_HANDLER(PluginProxy::KeyPressHandler);
+    QZ_REGISTER_EVENT_HANDLER(PluginProxy::KeyReleaseHandler);
 }
 
 bool VimPlugin::testPlugin()
@@ -75,7 +76,21 @@ bool VimPlugin::keyPress(const Qz::ObjectName &type, QObject* obj,
     if (!view)
         return false;
 
-    m_vim_engine.handleKeyEvent(view->page(), event);
+    m_vim_engine.handleKeyPressEvent(view->page(), event);
+
+    return false;
+}
+
+bool VimPlugin::keyRelease(const Qz::ObjectName &type, QObject* obj,
+        QKeyEvent* event)
+{
+    Q_UNUSED(type);
+
+    WebView *view = qobject_cast<WebView *>(obj);
+    if (!view)
+        return false;
+
+    m_vim_engine.handleKeyReleaseEvent(view->page(), event);
 
     return false;
 }

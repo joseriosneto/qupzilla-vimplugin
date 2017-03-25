@@ -20,23 +20,44 @@
 #define VIM_ENGINE_H
 
 #include "webpage.h"
-#include <QKeyEvent>
 
-class VimEngine
+#include <QKeyEvent>
+#include <QTimer>
+
+class VimEngine : public QObject
 {
+    Q_OBJECT
+
     public:
         explicit VimEngine();
 
-        int stepSize() const
+        void handleKeyPressEvent(WebPage *page, QKeyEvent *event);
+        void handleKeyReleaseEvent(WebPage *page, QKeyEvent *event);
+        void startScroll(int scroll_hor, int scroll_vert);
+
+#ifdef VIM_PLUGIN_TESTS
+        const QTimer* scrollTimer() const
+        {
+            return &m_scroll_timer;
+        }
+
+        static int stepSize()
         {
             return m_single_step;
         }
+#endif
 
-        void handleKeyEvent(WebPage *page, QKeyEvent *event);
+    private slots:
+        void scroll();
 
     private:
-        int m_single_step;
+        static int m_single_step;
         bool m_g_pressed;
+        bool m_scroll_active;
+        int m_scroll_hor;
+        int m_scroll_vert;
+        QTimer m_scroll_timer;
+        WebPage *m_page;
 };
 
 #endif

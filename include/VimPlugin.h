@@ -38,11 +38,15 @@ class VimPlugin : public QObject, public PluginInterface
 
         bool keyPress(const Qz::ObjectName &type, QObject* obj,
                 QKeyEvent* event);
+        bool keyRelease(const Qz::ObjectName &type, QObject* obj,
+                QKeyEvent* event);
 
-        int singleStepSize() const
+#ifdef VIM_PLUGIN_TESTS
+        const VimEngine& vimEngine() const
         {
-            return m_vim_engine.stepSize();
+            return m_vim_engine;
         }
+#endif
 
     private:
         VimEngine m_vim_engine;

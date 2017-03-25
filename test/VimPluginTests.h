@@ -24,6 +24,7 @@
 #include "browserwindow.h"
 #include "tabbedwebview.h"
 #include "webpage.h"
+#include "pluginproxy.h"
 
 class VimPluginTests : public QObject
 {
@@ -60,6 +61,8 @@ class VimPluginTests : public QObject
 
         void ScrollNavigationWithHJKL_data();
         void ScrollNavigationWithHJKL();
+
+        void ScrollSmoothlyWithHJKL();
 
         void ScrollToTopWithDoubleLowerCaseG_data();
         void ScrollToTopWithDoubleLowerCaseG();
@@ -130,14 +133,13 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
     QTest::addColumn<QTestEventList>("key_event");
     QTest::addColumn<QPointF>("expected_pos");
 
-    VimPlugin vim_plugin;
     int initial_x = 100;
     int initial_y = 100;
 
     QTestEventList key_h_scroll_left;
     key_h_scroll_left.addKeyClicks("h");
     QTest::newRow("scroll left on 'h'") << key_h_scroll_left
-        << QPointF(initial_x - vim_plugin.singleStepSize(), initial_y);
+        << QPointF(initial_x - VimEngine::stepSize(), initial_y);
 
     QTestEventList key_H_dont_scroll;
     key_H_dont_scroll.addKeyClicks("H");
@@ -147,7 +149,7 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
     QTestEventList key_j_scroll_down;
     key_j_scroll_down.addKeyClicks("j");
     QTest::newRow("scroll down on 'j'") << key_j_scroll_down
-        << QPointF(initial_x, initial_y + vim_plugin.singleStepSize());
+        << QPointF(initial_x, initial_y + VimEngine::stepSize());
 
     QTestEventList key_J_dont_scroll;
     key_J_dont_scroll.addKeyClicks("J");
@@ -157,7 +159,7 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
     QTestEventList key_k_scroll_up;
     key_k_scroll_up.addKeyClicks("k");
     QTest::newRow("scroll up on 'k'") << key_k_scroll_up
-        << QPointF(initial_x, initial_y - vim_plugin.singleStepSize());
+        << QPointF(initial_x, initial_y - VimEngine::stepSize());
 
     QTestEventList key_K_dont_scroll;
     key_K_dont_scroll.addKeyClicks("K");
@@ -167,7 +169,7 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
     QTestEventList key_l_scroll_right;
     key_l_scroll_right.addKeyClicks("l");
     QTest::newRow("scroll right on 'l'") << key_l_scroll_right
-        << QPointF(initial_x + vim_plugin.singleStepSize(), initial_y);
+        << QPointF(initial_x + VimEngine::stepSize(), initial_y);
 
     QTestEventList key_L_dont_scroll;
     key_L_dont_scroll.addKeyClicks("L");
@@ -191,9 +193,34 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
 
     key_event.simulate(view->parentWidget());
-    processEvents();
     QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
     QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
+}
+
+void VimPluginTests::ScrollSmoothlyWithHJKL()
+{
+    WebView *view = nullptr;
+    QString test_page("file:///" + QCoreApplication::applicationDirPath()
+            + "/pages/long_page_w5000px_h5000px.html");
+
+    loadTestPage(test_page, &view);
+
+    qreal initial_x = 100;
+    qreal initial_y = 100;
+
+    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+            .arg(initial_x).arg(initial_y));
+    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+
+    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
+            mApp->plugins()->getAvailablePlugins().front().instance);
+
+    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
+    QTest::keyPress(view->parentWidget(), 'j');
+    processEvents(110);
+    QTest::keyRelease(view->parentWidget(), 'j');
+    QTRY_COMPARE(spy.count(), 5);
 }
 
 void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
@@ -202,22 +229,25 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
     QTest::addColumn<QPointF>("expected_pos");
 
     /* Initial position: (x = 100, y = 500) */
+    qreal initial_x = 100;
+    qreal initial_y = 500;
 
     QTestEventList keys_gg_scroll_top;
     keys_gg_scroll_top.addKeyClicks("gg");
     QTest::newRow("scroll to top on 'gg'") << keys_gg_scroll_top
-        << QPointF(100, 0);
+        << QPointF(initial_x, 0);
 
     QTestEventList keys_gjg_dont_scroll_top;
     /* Last 'a' to clean the state and not affect the next test. */
     keys_gjg_dont_scroll_top.addKeyClicks("gjga");
     QTest::newRow("dont scroll to top with 'gjg' (vim key between 'g's")
-        << keys_gjg_dont_scroll_top << QPointF(100, 530);
+        << keys_gjg_dont_scroll_top
+        << QPointF(initial_x, initial_y + VimEngine::stepSize());
 
     QTestEventList keys_gag_dont_scroll_top;
     keys_gag_dont_scroll_top.addKeyClicks("gag");
     QTest::newRow("dont scroll to top with 'gag' (non vim key between 'g's")
-        << keys_gag_dont_scroll_top << QPointF(100, 500);
+        << keys_gag_dont_scroll_top << QPointF(initial_x, initial_y);
 }
 
 void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()

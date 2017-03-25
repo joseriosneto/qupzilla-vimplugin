@@ -17,6 +17,8 @@ HEADERS += VimPluginTests.h \
 SOURCES += ../src/VimPlugin.cpp \
            ../src/VimEngine.cpp
 
+DEFINES += VIM_PLUGIN_TESTS
+
 # We need QupZilla source
 qupzilla_src_dir = $$(QUPZILLA_SRCDIR)
 equals(qupzilla_src_dir, "") {
