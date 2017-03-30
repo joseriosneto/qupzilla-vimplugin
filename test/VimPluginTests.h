@@ -226,33 +226,39 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
 {
     QTest::addColumn<QTestEventList>("key_event");
     QTest::addColumn<QPointF>("expected_pos");
+    QTest::addColumn<int>("expected_scroll_steps");
 
-    /* Initial position: (x = 100, y = 500) */
     qreal initial_x = 100;
-    qreal initial_y = 500;
+    qreal initial_y = 4000;
 
     QTestEventList keys_gg_scroll_top;
     keys_gg_scroll_top.addKeyClicks("gg");
-    QTest::newRow("scroll to top on 'gg'") << keys_gg_scroll_top
-        << QPointF(initial_x, 0);
+    QTest::newRow("scroll to top on 'gg'")
+        << keys_gg_scroll_top
+        << QPointF(initial_x, 0)
+        << VimEngine::numStepsFullScroll();
 
     QTestEventList keys_gjg_dont_scroll_top;
     /* Last 'a' to clean the state and not affect the next test. */
     keys_gjg_dont_scroll_top.addKeyClicks("gjga");
     QTest::newRow("dont scroll to top with 'gjg' (vim key between 'g's")
         << keys_gjg_dont_scroll_top
-        << QPointF(initial_x, initial_y + VimEngine::stepSize());
+        << QPointF(initial_x, initial_y + VimEngine::stepSize())
+        << 0;
 
     QTestEventList keys_gag_dont_scroll_top;
     keys_gag_dont_scroll_top.addKeyClicks("gag");
     QTest::newRow("dont scroll to top with 'gag' (non vim key between 'g's")
-        << keys_gag_dont_scroll_top << QPointF(initial_x, initial_y);
+        << keys_gag_dont_scroll_top
+        << QPointF(initial_x, initial_y)
+        << 0;
 }
 
 void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
 {
     QFETCH(QTestEventList, key_event);
     QFETCH(QPointF, expected_pos);
+    QFETCH(int, expected_scroll_steps);
 
     WebView *view = nullptr;
     QString test_page("file:///" + QCoreApplication::applicationDirPath()
@@ -260,12 +266,19 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
 
     loadTestPage(test_page, &view);
 
-    view->page()->runJavaScript("window.scrollTo(100, 500);");
-    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
-    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(500));
+    qreal initial_x = 100;
+    qreal initial_y = 4000;
 
+    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+            .arg(initial_x).arg(initial_y));
+    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+
+    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
+            mApp->plugins()->getAvailablePlugins().front().instance);
+    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     key_event.simulate(view->parentWidget());
-    processEvents();
+    QTRY_COMPARE(spy.count(), expected_scroll_steps);
     QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
     QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
 }

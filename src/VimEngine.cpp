@@ -64,20 +64,14 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
 
     if ("G" == event->text()) {
         m_page->runJavaScript(
-                QString(
-                    "(function() {"
-                    "   var res = {"
-                    "       scrollTop: document.body.scrollTop,"
-                    "       scrollHeight: document.body.scrollHeight"
-                    "   };"
-                    "   return res;"
-                    "})()"),
-                [this] (const QVariant& res) {
-                    const QVariantMap map = res.toMap();
-                    this->startFullScroll(
-                        map.value(QString("scrollTop")).toInt(),
-                        map.value(QString("scrollHeight")).toInt());
-                });
+            QString("var page_height = document.body.scrollHeight;"
+                    "var page_y_offset = window.pageYOffset;"
+                    /* Adding 10 because of int truncation. */
+                    "((page_height - page_y_offset) / %1) + 10;")
+                .arg(m_num_full_scroll_steps),
+            [this] (const QVariant& res) {
+                this->startFullVerticalScroll(res.toInt());
+            });
         goto end;
     }
 
@@ -100,8 +94,13 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
             m_g_pressed = true;
             return;
         }
-        page->runJavaScript(QString("window.scrollTo(%1, 0)")
-                .arg(cur_scroll_pos.x()));
+        m_page->runJavaScript(
+            /* Adding 10 because of int truncation. */
+            QString("-1 * ((window.pageYOffset / %1) + 10)")
+                .arg(m_num_full_scroll_steps),
+            [this] (const QVariant& res) {
+                this->startFullVerticalScroll(res.toInt());
+            });
         goto end;
     }
 
@@ -171,13 +170,12 @@ void VimEngine::stopScroll()
     m_scroll_timer.stop();
 }
 
-void VimEngine::startFullScroll(int scroll_top, int scroll_height)
+void VimEngine::startFullVerticalScroll(int scroll_step_size)
 {
     stopScroll();
 
     m_scroll_hor = 0;
-    /* Adding 10 because of int truncation. */
-    m_scroll_vert = (scroll_height - scroll_top) / m_num_full_scroll_steps + 10;
+    m_scroll_vert = scroll_step_size;
 
     /* We only disconnect this class to avoid affecting tests. */
     m_scroll_timer.disconnect(this);

@@ -63,7 +63,7 @@ class VimEngine : public QObject
     private:
         void startScroll(int scroll_hor, int scroll_vert);
         void stopScroll();
-        void startFullScroll(int scroll_top, int scroll_height);
+        void startFullVerticalScroll(int scroll_step_size);
         void stopFullScroll();
 
         static int m_single_step;
