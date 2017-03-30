@@ -61,7 +61,6 @@ class VimPluginTests : public QObject
 
         void ScrollNavigationWithHJKL_data();
         void ScrollNavigationWithHJKL();
-
         void ScrollSmoothlyWithHJKL();
 
         void ScrollToTopWithDoubleLowerCaseG_data();
@@ -279,26 +278,50 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
 
     loadTestPage(test_page, &view);
 
-    view->page()->runJavaScript("window.scrollTo(100, 0);");
-    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
-    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(0));
+    qreal initial_x = 100;
+    qreal initial_y = 0;
 
-    qreal client_height = view->page()->execJavaScript(
-            "document.body.clientHeight;").toReal();
-    qreal scroll_height = view->page()->execJavaScript(
-            "document.body.scrollHeight;").toReal();
-    qreal scroll_top = view->page()->execJavaScript(
-            "document.body.scrollTop;").toReal();
+    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+            .arg(initial_x).arg(initial_y));
+    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
-    QVERIFY(scroll_height != scroll_top + client_height);
+    qreal page_y_offset = 0;
+    qreal window_height = 0;
+    qreal scroll_height = 0;
 
+    view->page()->runJavaScript(
+        QString(
+            "(function() {"
+            "   var res = {"
+            "       page_y_offset: window.pageYOffset,"
+            "       window_height: document.documentElement.clientHeight,"
+            "       scroll_height: document.body.scrollHeight"
+            "   };"
+            "   return res;"
+            "})()"),
+        [&page_y_offset, &window_height, &scroll_height](const QVariant& res) {
+            const QVariantMap map = res.toMap();
+            page_y_offset = map.value(QString("page_y_offset")).toReal();
+            window_height = map.value(QString("window_height")).toReal();
+            scroll_height = map.value(QString("scroll_height")).toReal();
+        });
+
+    QTRY_VERIFY(scroll_height != page_y_offset + window_height);
+
+    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
+            mApp->plugins()->getAvailablePlugins().front().instance);
+    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     QTest::keyClick(view->parentWidget(), 'G');
-    processEvents();
-    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
+    QTRY_COMPARE(spy.count(), VimEngine::numStepsFullScroll());
+    QCOMPARE(view->page()->scrollPosition().x(), qreal(initial_x));
 
-    scroll_top = view->page()->execJavaScript(
-            "document.body.scrollTop;").toReal();
-    QVERIFY(scroll_height == scroll_top + client_height);
+    view->page()->runJavaScript(
+        QString("(function() {return window.pageYOffset;})()"),
+        [&page_y_offset](const QVariant& res) {
+            page_y_offset = res.toReal();
+        });
+    QTRY_VERIFY(scroll_height == page_y_offset + window_height);
 }
 
 void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()

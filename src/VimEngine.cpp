@@ -20,6 +20,7 @@
 
 int VimEngine::m_single_step = 18;
 int VimEngine::m_single_step_interval = 20;
+int VimEngine::m_num_full_scroll_steps = 10;
 
 VimEngine::VimEngine()
     : m_g_pressed(false)
@@ -39,6 +40,7 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
     Q_ASSERT(event);
 
     const QPointF cur_scroll_pos = page->scrollPosition();
+    m_page = page;
 
     if ("h" == event->text()) {
         startScroll(-1 * m_single_step, 0);
@@ -61,9 +63,21 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
     }
 
     if ("G" == event->text()) {
-        page->runJavaScript(
-                QString("window.scrollTo(%1, document.body.scrollHeight);")
-                .arg(cur_scroll_pos.x()));
+        m_page->runJavaScript(
+                QString(
+                    "(function() {"
+                    "   var res = {"
+                    "       scrollTop: document.body.scrollTop,"
+                    "       scrollHeight: document.body.scrollHeight"
+                    "   };"
+                    "   return res;"
+                    "})()"),
+                [this] (const QVariant& res) {
+                    const QVariantMap map = res.toMap();
+                    this->startFullScroll(
+                        map.value(QString("scrollTop")).toInt(),
+                        map.value(QString("scrollHeight")).toInt());
+                });
         goto end;
     }
 
@@ -92,7 +106,6 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
     }
 
 end:
-    m_page = page;
     m_g_pressed = false;
     return;
 }
@@ -122,6 +135,24 @@ void VimEngine::handleKeyReleaseEvent(WebPage *page, QKeyEvent *event)
     }
 }
 
+void VimEngine::scroll()
+{
+    m_page->scroll(m_scroll_hor, m_scroll_vert);
+    if (!m_scroll_active)
+        stopScroll();
+}
+
+void VimEngine::fullScroll()
+{
+    static int step_i = 0;
+    m_page->scroll(m_scroll_hor, m_scroll_vert);
+    ++step_i;
+    if (step_i >= m_num_full_scroll_steps) {
+        step_i = 0;
+        stopFullScroll();
+    }
+}
+
 void VimEngine::startScroll(int scroll_hor, int scroll_vert)
 {
     m_scroll_hor = scroll_hor;
@@ -132,12 +163,32 @@ void VimEngine::startScroll(int scroll_hor, int scroll_vert)
     }
 }
 
-void VimEngine::scroll()
+void VimEngine::stopScroll()
 {
-    m_page->scroll(m_scroll_hor, m_scroll_vert);
-    if (!m_scroll_active) {
-        m_scroll_hor = 0;
-        m_scroll_vert = 0;
-        m_scroll_timer.stop();
-    }
+    m_scroll_hor = 0;
+    m_scroll_vert = 0;
+    m_scroll_active = false;
+    m_scroll_timer.stop();
+}
+
+void VimEngine::startFullScroll(int scroll_top, int scroll_height)
+{
+    stopScroll();
+
+    m_scroll_hor = 0;
+    /* Adding 10 because of int truncation. */
+    m_scroll_vert = (scroll_height - scroll_top) / m_num_full_scroll_steps + 10;
+
+    /* We only disconnect this class to avoid affecting tests. */
+    m_scroll_timer.disconnect(this);
+    connect(&m_scroll_timer, SIGNAL(timeout()), this, SLOT(fullScroll()));
+    m_scroll_timer.start();
+}
+
+void VimEngine::stopFullScroll()
+{
+    stopScroll();
+    /* We only disconnect this class to avoid affecting tests. */
+    m_scroll_timer.disconnect(this);
+    connect(&m_scroll_timer, SIGNAL(timeout()), this, SLOT(scroll()));
 }

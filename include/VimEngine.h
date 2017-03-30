@@ -33,7 +33,6 @@ class VimEngine : public QObject
 
         void handleKeyPressEvent(WebPage *page, QKeyEvent *event);
         void handleKeyReleaseEvent(WebPage *page, QKeyEvent *event);
-        void startScroll(int scroll_hor, int scroll_vert);
 
 #ifdef VIM_PLUGIN_TESTS
         const QTimer* scrollTimer() const
@@ -50,20 +49,33 @@ class VimEngine : public QObject
         {
             return m_single_step_interval;
         }
+
+        static int numStepsFullScroll()
+        {
+            return m_num_full_scroll_steps;
+        }
 #endif
 
     private slots:
         void scroll();
+        void fullScroll();
 
     private:
+        void startScroll(int scroll_hor, int scroll_vert);
+        void stopScroll();
+        void startFullScroll(int scroll_top, int scroll_height);
+        void stopFullScroll();
+
         static int m_single_step;
         static int m_single_step_interval;
+        static int m_num_full_scroll_steps;
         bool m_g_pressed;
         bool m_scroll_active;
         int m_scroll_hor;
         int m_scroll_vert;
         QTimer m_scroll_timer;
         WebPage *m_page;
+
 };
 
 #endif
