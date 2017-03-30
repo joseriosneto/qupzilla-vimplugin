@@ -39,7 +39,6 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
     Q_ASSERT(page);
     Q_ASSERT(event);
 
-    const QPointF cur_scroll_pos = page->scrollPosition();
     m_page = page;
 
     if ("h" == event->text()) {
@@ -77,15 +76,23 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
 
     if ("u" == event->text()) {
         page->runJavaScript(
-                QString("window.scrollTo(%1, %2 - (window.innerHeight / 2));")
-                .arg(cur_scroll_pos.x()).arg(cur_scroll_pos.y()));
+            QString("document.documentElement.clientHeight / 2"),
+            [this] (const QVariant &res) {
+                /* I putted the multiplication with -1 here because somehow the
+                 * truncation was different by 1 unit in the tests. This was
+                 * making the tests fail.
+                 */
+                this->startScroll(0, -1 * res.toInt());
+            });
         goto end;
     }
 
     if ("d" == event->text()) {
         page->runJavaScript(
-                QString("window.scrollTo(%1, %2 + (window.innerHeight / 2));")
-                .arg(cur_scroll_pos.x()).arg(cur_scroll_pos.y()));
+            QString("document.documentElement.clientHeight / 2"),
+            [this] (const QVariant &res) {
+                this->startScroll(0, res.toInt());
+            });
         goto end;
     }
 
@@ -129,6 +136,16 @@ void VimEngine::handleKeyReleaseEvent(WebPage *page, QKeyEvent *event)
     }
 
     if ("l" == event->text()) {
+        m_scroll_active = false;
+        return;
+    }
+
+    if ("u" == event->text()) {
+        m_scroll_active = false;
+        return;
+    }
+
+    if ("d" == event->text()) {
         m_scroll_active = false;
         return;
     }

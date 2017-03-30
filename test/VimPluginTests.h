@@ -346,21 +346,28 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
     loadTestPage(test_page, &view);
 
     qreal initial_x = 200;
-    qreal initial_y = 1000;
+    qreal initial_y = 4000;
+    int num_expected_scroll_steps = 5;
 
     view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
-    qreal window_inner_height = view->page()->execJavaScript(
-            "window.innerHeight;").toReal();
-    qreal expected_y = initial_y - (window_inner_height / 2);
+    int scroll_step_size = view->page()->execJavaScript(
+            "document.documentElement.clientHeight / 2").toInt();
 
+    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
+            mApp->plugins()->getAvailablePlugins().front().instance);
+    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     QTest::keyClick(view->parentWidget(), 'u');
-    processEvents();
+    QTest::qWait((num_expected_scroll_steps * VimEngine::stepsInterval()) + 10);
+    QTest::keyRelease(view->parentWidget(), 'u');
+    QTRY_COMPARE(spy.count(), num_expected_scroll_steps);
+
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_y);
+    QTRY_COMPARE(view->page()->scrollPosition().y(),
+            initial_y - (num_expected_scroll_steps * scroll_step_size));
 }
 
 void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
@@ -372,21 +379,28 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
     loadTestPage(test_page, &view);
 
     qreal initial_x = 200;
-    qreal initial_y = 1000;
+    qreal initial_y = 0;
+    int num_expected_scroll_steps = 5;
 
     view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
-    qreal window_inner_height = view->page()->execJavaScript(
-            "window.innerHeight;").toReal();
-    qreal expected_y = initial_y + (window_inner_height / 2);
+    int scroll_step_size = view->page()->execJavaScript(
+            "document.documentElement.clientHeight / 2").toInt();
 
+    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
+            mApp->plugins()->getAvailablePlugins().front().instance);
+    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     QTest::keyClick(view->parentWidget(), 'd');
-    processEvents();
+    QTest::qWait((num_expected_scroll_steps * VimEngine::stepsInterval()) + 10);
+    QTest::keyRelease(view->parentWidget(), 'd');
+    QTRY_COMPARE(spy.count(), num_expected_scroll_steps);
+
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_y);
+    QTRY_COMPARE(view->page()->scrollPosition().y(),
+            initial_y + (num_expected_scroll_steps * scroll_step_size));
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
