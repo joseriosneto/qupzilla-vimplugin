@@ -413,3 +413,4 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
  * and it was not coping well with QTEST_MAIN.
  */
 QTEST_APPLESS_MAIN(VimPluginTests)
+#include "VimPluginTests.moc"

@@ -10,11 +10,11 @@ OBJECTS_DIR = ../build
 MOC_DIR = ../build
 RCC_DIR = ../build
 
-HEADERS += VimPluginTests.h \
-           ../include/VimPlugin.h \
+HEADERS += ../include/VimPlugin.h \
            ../include/VimEngine.h
 
-SOURCES += ../src/VimPlugin.cpp \
+SOURCES += VimPluginTests.cpp   \
+           ../src/VimPlugin.cpp \
            ../src/VimEngine.cpp
 
 DEFINES += VIM_PLUGIN_TESTS
