@@ -45,37 +45,39 @@ class VimEngine : public QObject
             return m_single_step;
         }
 
+        static int scrollSizeWithHJKL()
+        {
+            return m_single_step * m_num_scroll_steps;
+        }
+
         static int stepsInterval()
         {
             return m_single_step_interval;
         }
 
-        static int numStepsFullScroll()
+        static int numSteps()
         {
-            return m_num_full_scroll_steps;
+            return m_num_scroll_steps;
         }
 #endif
 
     private slots:
         void scroll();
-        void fullScroll();
 
     private:
         void startScroll(int scroll_hor, int scroll_vert);
-        void stopScroll();
         void startFullVerticalScroll(int scroll_step_size);
-        void stopFullScroll();
+        void stopScroll();
 
         static int m_single_step;
         static int m_single_step_interval;
-        static int m_num_full_scroll_steps;
+        static int m_num_scroll_steps;
         bool m_g_pressed;
         bool m_scroll_active;
         int m_scroll_hor;
         int m_scroll_vert;
         QTimer m_scroll_timer;
         WebPage *m_page;
-
 };
 
 #endif

@@ -20,7 +20,7 @@
 
 int VimEngine::m_single_step = 18;
 int VimEngine::m_single_step_interval = 20;
-int VimEngine::m_num_full_scroll_steps = 10;
+int VimEngine::m_num_scroll_steps = 10;
 
 VimEngine::VimEngine()
     : m_g_pressed(false)
@@ -36,9 +36,6 @@ VimEngine::VimEngine()
 
 void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
 {
-    Q_ASSERT(page);
-    Q_ASSERT(event);
-
     m_page = page;
 
     if ("h" == event->text()) {
@@ -67,7 +64,7 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
                     "var page_y_offset = window.pageYOffset;"
                     /* Adding 10 because of int truncation. */
                     "((page_height - page_y_offset) / %1) + 10;")
-                .arg(m_num_full_scroll_steps),
+                .arg(m_num_scroll_steps),
             [this] (const QVariant& res) {
                 this->startFullVerticalScroll(res.toInt());
             });
@@ -76,7 +73,8 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
 
     if ("u" == event->text()) {
         page->runJavaScript(
-            QString("document.documentElement.clientHeight / 2"),
+            QString("(document.documentElement.clientHeight / 2) / %1")
+                .arg(m_num_scroll_steps),
             [this] (const QVariant &res) {
                 /* I putted the multiplication with -1 here because somehow the
                  * truncation was different by 1 unit in the tests. This was
@@ -89,7 +87,8 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
 
     if ("d" == event->text()) {
         page->runJavaScript(
-            QString("document.documentElement.clientHeight / 2"),
+            QString("(document.documentElement.clientHeight / 2) / %1")
+                .arg(m_num_scroll_steps),
             [this] (const QVariant &res) {
                 this->startScroll(0, res.toInt());
             });
@@ -104,7 +103,7 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
         m_page->runJavaScript(
             /* Adding 10 because of int truncation. */
             QString("-1 * ((window.pageYOffset / %1) + 10)")
-                .arg(m_num_full_scroll_steps),
+                .arg(m_num_scroll_steps),
             [this] (const QVariant& res) {
                 this->startFullVerticalScroll(res.toInt());
             });
@@ -153,19 +152,14 @@ void VimEngine::handleKeyReleaseEvent(WebPage *page, QKeyEvent *event)
 
 void VimEngine::scroll()
 {
-    m_page->scroll(m_scroll_hor, m_scroll_vert);
-    if (!m_scroll_active)
-        stopScroll();
-}
-
-void VimEngine::fullScroll()
-{
     static int step_i = 0;
     m_page->scroll(m_scroll_hor, m_scroll_vert);
     ++step_i;
-    if (step_i >= m_num_full_scroll_steps) {
+    if (step_i >= m_num_scroll_steps) {
         step_i = 0;
-        stopFullScroll();
+        /* If the user is still pressing the key we don't stop scrolling. */
+        if (!m_scroll_active)
+            stopScroll();
     }
 }
 
@@ -193,17 +187,5 @@ void VimEngine::startFullVerticalScroll(int scroll_step_size)
 
     m_scroll_hor = 0;
     m_scroll_vert = scroll_step_size;
-
-    /* We only disconnect this class to avoid affecting tests. */
-    m_scroll_timer.disconnect(this);
-    connect(&m_scroll_timer, SIGNAL(timeout()), this, SLOT(fullScroll()));
     m_scroll_timer.start();
-}
-
-void VimEngine::stopFullScroll()
-{
-    stopScroll();
-    /* We only disconnect this class to avoid affecting tests. */
-    m_scroll_timer.disconnect(this);
-    connect(&m_scroll_timer, SIGNAL(timeout()), this, SLOT(scroll()));
 }

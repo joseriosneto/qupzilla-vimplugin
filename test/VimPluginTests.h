@@ -61,7 +61,6 @@ class VimPluginTests : public QObject
 
         void ScrollNavigationWithHJKL_data();
         void ScrollNavigationWithHJKL();
-        void ScrollSmoothlyWithHJKL();
 
         void ScrollToTopWithDoubleLowerCaseG_data();
         void ScrollToTopWithDoubleLowerCaseG();
@@ -131,55 +130,73 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
 {
     QTest::addColumn<QTestEventList>("key_event");
     QTest::addColumn<QPointF>("expected_pos");
+    QTest::addColumn<int>("expected_scroll_steps");
 
-    int initial_x = 100;
-    int initial_y = 100;
+    int initial_x = 1000;
+    int initial_y = 1000;
 
     QTestEventList key_h_scroll_left;
     key_h_scroll_left.addKeyClicks("h");
-    QTest::newRow("scroll left on 'h'") << key_h_scroll_left
-        << QPointF(initial_x - VimEngine::stepSize(), initial_y);
+    QTest::newRow("scroll left on 'h'")
+        << key_h_scroll_left
+        << QPointF(initial_x - VimEngine::scrollSizeWithHJKL(), initial_y)
+        << VimEngine::numSteps();
 
     QTestEventList key_H_dont_scroll;
     key_H_dont_scroll.addKeyClicks("H");
-    QTest::newRow("dont scroll left on 'H'") << key_H_dont_scroll
-        << QPointF(initial_x, initial_y);
+    QTest::newRow("dont scroll left on 'H'")
+        << key_H_dont_scroll
+        << QPointF(initial_x, initial_y)
+        << 0;
 
     QTestEventList key_j_scroll_down;
     key_j_scroll_down.addKeyClicks("j");
-    QTest::newRow("scroll down on 'j'") << key_j_scroll_down
-        << QPointF(initial_x, initial_y + VimEngine::stepSize());
+    QTest::newRow("scroll down on 'j'")
+        << key_j_scroll_down
+        << QPointF(initial_x, initial_y + VimEngine::scrollSizeWithHJKL())
+        << VimEngine::numSteps();
 
     QTestEventList key_J_dont_scroll;
     key_J_dont_scroll.addKeyClicks("J");
-    QTest::newRow("dont scroll down on 'J'") << key_J_dont_scroll
-        << QPointF(initial_x, initial_y);
+    QTest::newRow("dont scroll down on 'J'")
+        << key_J_dont_scroll
+        << QPointF(initial_x, initial_y)
+        << 0;
 
     QTestEventList key_k_scroll_up;
     key_k_scroll_up.addKeyClicks("k");
-    QTest::newRow("scroll up on 'k'") << key_k_scroll_up
-        << QPointF(initial_x, initial_y - VimEngine::stepSize());
+    QTest::newRow("scroll up on 'k'")
+        << key_k_scroll_up
+        << QPointF(initial_x, initial_y - VimEngine::scrollSizeWithHJKL())
+        << VimEngine::numSteps();
 
     QTestEventList key_K_dont_scroll;
     key_K_dont_scroll.addKeyClicks("K");
-    QTest::newRow("dont scroll up on 'K'") << key_K_dont_scroll
-        << QPointF(initial_x, initial_y);
+    QTest::newRow("dont scroll up on 'K'")
+        << key_K_dont_scroll
+        << QPointF(initial_x, initial_y)
+        << 0;
 
     QTestEventList key_l_scroll_right;
     key_l_scroll_right.addKeyClicks("l");
-    QTest::newRow("scroll right on 'l'") << key_l_scroll_right
-        << QPointF(initial_x + VimEngine::stepSize(), initial_y);
+    QTest::newRow("scroll right on 'l'")
+        << key_l_scroll_right
+        << QPointF(initial_x + VimEngine::scrollSizeWithHJKL(), initial_y)
+        << VimEngine::numSteps();
 
     QTestEventList key_L_dont_scroll;
     key_L_dont_scroll.addKeyClicks("L");
-    QTest::newRow("dont scroll right on 'L'") << key_L_dont_scroll
-        << QPointF(initial_x, initial_y);
+    QTest::newRow("dont scroll right on 'L'")
+        << key_L_dont_scroll
+        << QPointF(initial_x, initial_y)
+        << 0;
 }
 
 void VimPluginTests::ScrollNavigationWithHJKL()
 {
     QFETCH(QTestEventList, key_event);
     QFETCH(QPointF, expected_pos);
+    QFETCH(int, expected_scroll_steps);
 
     WebView *view = nullptr;
     QString test_page("file:///" + QCoreApplication::applicationDirPath()
@@ -187,25 +204,8 @@ void VimPluginTests::ScrollNavigationWithHJKL()
 
     loadTestPage(test_page, &view);
 
-    view->page()->runJavaScript("window.scrollTo(100, 100);");
-    QTRY_COMPARE(view->page()->scrollPosition().x(), qreal(100));
-    QTRY_COMPARE(view->page()->scrollPosition().y(), qreal(100));
-
-    key_event.simulate(view->parentWidget());
-    QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
-    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
-}
-
-void VimPluginTests::ScrollSmoothlyWithHJKL()
-{
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
-
-    loadTestPage(test_page, &view);
-
-    qreal initial_x = 100;
-    qreal initial_y = 100;
+    qreal initial_x = 1000;
+    qreal initial_y = 1000;
 
     view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
@@ -214,12 +214,12 @@ void VimPluginTests::ScrollSmoothlyWithHJKL()
 
     VimPlugin *vim_plugin = static_cast<VimPlugin*>(
             mApp->plugins()->getAvailablePlugins().front().instance);
-
     QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    QTest::keyPress(view->parentWidget(), 'j');
-    processEvents((5 * VimEngine::stepsInterval()) + 10);
-    QTest::keyRelease(view->parentWidget(), 'j');
-    QTRY_COMPARE(spy.count(), 5);
+    key_event.simulate(view->parentWidget());
+    QTRY_COMPARE(spy.count(), expected_scroll_steps);
+
+    QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
+    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
 }
 
 void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
@@ -236,14 +236,14 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
     QTest::newRow("scroll to top on 'gg'")
         << keys_gg_scroll_top
         << QPointF(initial_x, 0)
-        << VimEngine::numStepsFullScroll();
+        << VimEngine::numSteps();
 
     QTestEventList keys_gjg_dont_scroll_top;
     /* Last 'a' to clean the state and not affect the next test. */
     keys_gjg_dont_scroll_top.addKeyClicks("gjga");
     QTest::newRow("dont scroll to top with 'gjg' (vim key between 'g's")
         << keys_gjg_dont_scroll_top
-        << QPointF(initial_x, initial_y + VimEngine::stepSize())
+        << QPointF(initial_x, initial_y + VimEngine::scrollSizeWithHJKL())
         << 0;
 
     QTestEventList keys_gag_dont_scroll_top;
@@ -326,11 +326,11 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
             mApp->plugins()->getAvailablePlugins().front().instance);
     QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     QTest::keyClick(view->parentWidget(), 'G');
-    QTRY_COMPARE(spy.count(), VimEngine::numStepsFullScroll());
+    QTRY_COMPARE(spy.count(), VimEngine::numSteps());
     QCOMPARE(view->page()->scrollPosition().x(), qreal(initial_x));
 
     view->page()->runJavaScript(
-        QString("(function() {return window.pageYOffset;})()"),
+        QString("window.pageYOffset"),
         [&page_y_offset](const QVariant& res) {
             page_y_offset = res.toReal();
         });
@@ -345,9 +345,8 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
 
     loadTestPage(test_page, &view);
 
-    qreal initial_x = 200;
+    qreal initial_x = 2000;
     qreal initial_y = 4000;
-    int num_expected_scroll_steps = 5;
 
     view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
@@ -355,19 +354,23 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
     int scroll_step_size = view->page()->execJavaScript(
-            "document.documentElement.clientHeight / 2").toInt();
+            QString("(document.documentElement.clientHeight / 2) / %1")
+                .arg(VimEngine::numSteps())).toInt();
 
     VimPlugin *vim_plugin = static_cast<VimPlugin*>(
             mApp->plugins()->getAvailablePlugins().front().instance);
     QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    QTest::keyClick(view->parentWidget(), 'u');
-    QTest::qWait((num_expected_scroll_steps * VimEngine::stepsInterval()) + 10);
-    QTest::keyRelease(view->parentWidget(), 'u');
-    QTRY_COMPARE(spy.count(), num_expected_scroll_steps);
+    /* Since the scroll currently starts in VimEngine only after processing
+     * the javascript request using 'QTest::keyClick' makes keyRelased event
+     * to be generated before the scroll being started.
+     */
+    QTest::keyPress(view->parentWidget(), 'u');
+    QTest::keyRelease(view->parentWidget(), 'u', Qt::NoModifier, 50);
+    QTRY_COMPARE(spy.count(), VimEngine::numSteps());
 
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(),
-            initial_y - (num_expected_scroll_steps * scroll_step_size));
+            initial_y - (VimEngine::numSteps() * scroll_step_size));
 }
 
 void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
@@ -378,9 +381,8 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
 
     loadTestPage(test_page, &view);
 
-    qreal initial_x = 200;
-    qreal initial_y = 0;
-    int num_expected_scroll_steps = 5;
+    qreal initial_x = 100;
+    qreal initial_y = 100;
 
     view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
@@ -388,19 +390,23 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
     int scroll_step_size = view->page()->execJavaScript(
-            "document.documentElement.clientHeight / 2").toInt();
+            QString("(document.documentElement.clientHeight / 2) / %1")
+                .arg(VimEngine::numSteps())).toInt();
 
     VimPlugin *vim_plugin = static_cast<VimPlugin*>(
             mApp->plugins()->getAvailablePlugins().front().instance);
     QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    QTest::keyClick(view->parentWidget(), 'd');
-    QTest::qWait((num_expected_scroll_steps * VimEngine::stepsInterval()) + 10);
-    QTest::keyRelease(view->parentWidget(), 'd');
-    QTRY_COMPARE(spy.count(), num_expected_scroll_steps);
+    /* Since the scroll currently starts in VimEngine only after processing
+     * the javascript request using 'QTest::keyClick' makes keyRelased event
+     * to be generated before the scroll being started.
+     */
+    QTest::keyPress(view->parentWidget(), 'd');
+    QTest::keyRelease(view->parentWidget(), 'd', Qt::NoModifier, 50);
+    QTRY_COMPARE(spy.count(), VimEngine::numSteps());
 
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(),
-            initial_y + (num_expected_scroll_steps * scroll_step_size));
+            initial_y + (VimEngine::numSteps() * scroll_step_size));
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
