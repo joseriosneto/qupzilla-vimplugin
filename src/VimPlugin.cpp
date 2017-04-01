@@ -60,7 +60,8 @@ void VimPlugin::init(InitState state, const QString &settingsPath)
 
 bool VimPlugin::testPlugin()
 {
-    return true;
+    static const QString min_qupzilla_version("2.1.0");
+    return QString(Qz::VERSION) >= min_qupzilla_version;
 }
 
 void VimPlugin::unload()

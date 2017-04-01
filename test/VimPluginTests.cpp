@@ -57,7 +57,7 @@ class VimPluginTests : public QObject
 
         void PluginSpecHasCorrectData();
         void ProcessOnlyONWebViewEvents();
-        void LoadPluginOnVersion_2_1_99();
+        void LoadPluginOnlyOnCompatibleVersions();
 
         void ScrollNavigationWithHJKL_data();
         void ScrollNavigationWithHJKL();
@@ -120,7 +120,7 @@ void VimPluginTests::ProcessOnlyONWebViewEvents()
     QVERIFY(!vim_plugin.keyPress(Qz::ON_WebView, nullptr, nullptr));
 }
 
-void VimPluginTests::LoadPluginOnVersion_2_1_99()
+void VimPluginTests::LoadPluginOnlyOnCompatibleVersions()
 {
     VimPlugin vim_plugin;
     QVERIFY(vim_plugin.testPlugin());
