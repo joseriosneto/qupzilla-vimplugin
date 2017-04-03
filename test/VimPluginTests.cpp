@@ -48,6 +48,17 @@ class VimPluginTests : public QObject
              * initialize application.
              */
             QTestEventLoop::instance().enterLoop(1);
+
+            /* Get VimPlugin reference. */
+            m_vim_plugin = nullptr;
+            foreach (auto plugin, mApp->plugins()->getAvailablePlugins()) {
+                m_vim_plugin = dynamic_cast<VimPlugin*>(plugin.instance);
+                if (m_vim_plugin)
+                    break;
+            }
+
+            if (!m_vim_plugin)
+                QFAIL("VimPlugin is not loaded in current QupZilla's profile!");
         }
 
         void cleanupTestCase()
@@ -97,11 +108,11 @@ class VimPluginTests : public QObject
         }
 
         MainApplication *m_app;
+        VimPlugin *m_vim_plugin;
 };
 
 void VimPluginTests::PluginSpecHasCorrectData()
 {
-    VimPlugin vim_plugin;
     PluginSpec spec;
 
     spec.name = "Vim plugin";
@@ -111,19 +122,17 @@ void VimPluginTests::PluginSpecHasCorrectData()
     spec.version = "0.0.1";
     spec.author = "Jose Rios <joseriosneto@gmail.com>";
 
-    QVERIFY(spec == vim_plugin.pluginSpec());
+    QVERIFY(spec == m_vim_plugin->pluginSpec());
 }
 
 void VimPluginTests::ProcessOnlyONWebViewEvents()
 {
-    VimPlugin vim_plugin;
-    QVERIFY(!vim_plugin.keyPress(Qz::ON_WebView, nullptr, nullptr));
+    QVERIFY(!m_vim_plugin->keyPress(Qz::ON_WebView, nullptr, nullptr));
 }
 
 void VimPluginTests::LoadPluginOnlyOnCompatibleVersions()
 {
-    VimPlugin vim_plugin;
-    QVERIFY(vim_plugin.testPlugin());
+    QVERIFY(m_vim_plugin->testPlugin());
 }
 
 void VimPluginTests::ScrollNavigationWithHJKL_data()
@@ -212,9 +221,7 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
-    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
-            mApp->plugins()->getAvailablePlugins().front().instance);
-    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
+    QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     key_event.simulate(view->parentWidget());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
 
@@ -274,9 +281,7 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
 
-    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
-            mApp->plugins()->getAvailablePlugins().front().instance);
-    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
+    QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     key_event.simulate(view->parentWidget());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
     QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
@@ -322,9 +327,7 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
 
     QTRY_VERIFY(scroll_height != page_y_offset + window_height);
 
-    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
-            mApp->plugins()->getAvailablePlugins().front().instance);
-    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
+    QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     QTest::keyClick(view->parentWidget(), 'G');
     QTRY_COMPARE(spy.count(), VimEngine::numSteps());
     QCOMPARE(view->page()->scrollPosition().x(), qreal(initial_x));
@@ -357,9 +360,7 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
             QString("(document.documentElement.clientHeight / 2) / %1")
                 .arg(VimEngine::numSteps())).toInt();
 
-    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
-            mApp->plugins()->getAvailablePlugins().front().instance);
-    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
+    QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     /* Since the scroll currently starts in VimEngine only after processing
      * the javascript request using 'QTest::keyClick' makes keyRelased event
      * to be generated before the scroll being started.
@@ -393,9 +394,7 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
             QString("(document.documentElement.clientHeight / 2) / %1")
                 .arg(VimEngine::numSteps())).toInt();
 
-    VimPlugin *vim_plugin = static_cast<VimPlugin*>(
-            mApp->plugins()->getAvailablePlugins().front().instance);
-    QSignalSpy spy(vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
+    QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     /* Since the scroll currently starts in VimEngine only after processing
      * the javascript request using 'QTest::keyClick' makes keyRelased event
      * to be generated before the scroll being started.
