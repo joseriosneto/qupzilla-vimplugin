@@ -36,9 +36,9 @@ PluginSpec VimPlugin::pluginSpec()
     PluginSpec spec;
 
     spec.name = "Vim plugin";
-    spec.info = "How awesome is Vimium? This plugin try to port its "
-        "functionalities to QupZilla.";
-    spec.description = "Enable vim command set for browsing.";
+    spec.info =  "Enable vim command set for browsing.";
+    spec.description = "How awesome is Vimium? This plugin try to port its "
+                "functionalities to QupZilla.";
     spec.version = "0.0.1";
     spec.author = "Jose Rios <joseriosneto@gmail.com>";
     spec.icon = QPixmap(":/vimplugin/data/vim-logo-en.png");

@@ -105,9 +105,9 @@ void VimPluginTests::PluginSpecHasCorrectData()
     PluginSpec spec;
 
     spec.name = "Vim plugin";
-    spec.info = "How awesome is Vimium? This plugin try to port its "
+    spec.info =  "Enable vim command set for browsing.";
+    spec.description = "How awesome is Vimium? This plugin try to port its "
                 "functionalities to QupZilla.";
-    spec.description = "Enable vim command set for browsing.";
     spec.version = "0.0.1";
     spec.author = "Jose Rios <joseriosneto@gmail.com>";
 
