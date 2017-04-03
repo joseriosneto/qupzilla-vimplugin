@@ -6,6 +6,8 @@ QT += webenginewidgets testlib
 TEMPLATE = app
 TARGET = VimPluginTests
 
+CONFIG += testcase
+
 OBJECTS_DIR = ../build
 MOC_DIR = ../build
 RCC_DIR = ../build
