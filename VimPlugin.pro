@@ -8,6 +8,16 @@ equals(qupzilla_src_dir, "") {
     error("QUPZILLA_SRCDIR env var not defined!")
 }
 
+# We need libQupZilla. OSX specially since 'make install'
+# does not install it in default directory
+qupzilla_lib_dir = $$(QUPZILLA_LIBDIR)
+equals(qupzilla_lib_dir, "") {
+    mac {
+        error("QUPZILLA_LIBDIR env var must be defined for mac osx!")
+    }
+    qupzilla_lib_dir = /usr/lib/
+}
+
 QT += webenginewidgets
 
 TEMPLATE = lib
@@ -54,9 +64,9 @@ INCLUDEPATH += $$PWD/include/                       \
 DEPENDPATH += $$INCLUDEPATH               \
               $$qupzilla_src_dir/lib/data \
 
-LIBS += -lQupZilla
+LIBS += -L$$qupzilla_lib_dir -lQupZilla
 
 !mac:unix {
-    target.path = /usr/lib/qupzilla
+    target.path = $$qupzilla_lib_dir
     INSTALLS += target
 }
