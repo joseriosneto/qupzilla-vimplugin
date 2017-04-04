@@ -100,13 +100,6 @@ class VimPluginTests : public QObject
             (*view) = tab_view;
         }
 
-        void processEvents(int ms_maxtime = 50)
-        {
-            QEventLoop loop;
-            QTimer::singleShot(ms_maxtime, &loop, &QEventLoop::quit);
-            loop.exec();
-        }
-
         MainApplication *m_app;
         VimPlugin *m_vim_plugin;
 };
