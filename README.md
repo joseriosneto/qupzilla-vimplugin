@@ -15,3 +15,16 @@ Then you can compile running these commands:
     $ qmake
     $ make
     $ sudo make install
+
+# Keyboard Bindings
+
+Navigating the current page:
+
+    h       scroll left
+    j       scroll down
+    k       scroll up
+    l       scroll right
+    gg      scroll to top of the page
+    G       scroll to bottom of the page
+    d       scroll down half a page
+    u       scroll up half a page
