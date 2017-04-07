@@ -67,6 +67,6 @@ DEPENDPATH += $$INCLUDEPATH               \
 LIBS += -L$$qupzilla_lib_dir -lQupZilla
 
 !mac:unix {
-    target.path = $$qupzilla_lib_dir
+    target.path = $$qupzilla_lib_dir/qupzilla/
     INSTALLS += target
 }
