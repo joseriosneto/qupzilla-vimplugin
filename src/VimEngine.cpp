@@ -18,6 +18,8 @@
 
 #include "VimEngine.h"
 
+#include "webview.h"
+
 const int VimEngine::m_single_step = 9;
 const int VimEngine::m_single_step_interval = 15;
 const int VimEngine::m_num_scroll_steps = 7;
@@ -107,6 +109,11 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
             [this] (const QVariant& res) {
                 this->startFullVerticalScroll(res.toInt());
             });
+        goto end;
+    }
+
+    if ("r" == event->text()) {
+        m_page->view()->reload();
         goto end;
     }
 

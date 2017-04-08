@@ -28,3 +28,4 @@ Navigating the current page:
     G       scroll to bottom of the page
     d       scroll down half a page
     u       scroll up half a page
+    r       reload page

@@ -86,6 +86,8 @@ class VimPluginTests : public QObject
         void ScrollHalfViewportUpWithLowerCaseU();
         void ScrollHalfViewportDownWithLowerCaseD();
 
+        void ReloadPageWithLowerCaseR();
+
     private:
         void loadTestPage(const QString &url, WebView **view)
         {
@@ -404,6 +406,27 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
     QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(view->page()->scrollPosition().y(),
             initial_y + (VimEngine::numSteps() * scroll_step_size));
+}
+
+void VimPluginTests::ReloadPageWithLowerCaseR()
+{
+    WebView *view = nullptr;
+    QString test_page("file:///" + QCoreApplication::applicationDirPath()
+            + "/pages/long_page_w5000px_h5000px.html");
+
+    loadTestPage(test_page, &view);
+
+    qreal initial_x = 100;
+    qreal initial_y = 100;
+
+    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+            .arg(initial_x).arg(initial_y));
+    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+
+    QSignalSpy spy(view, SIGNAL(loadStarted()));
+    QTest::keyClick(view->parentWidget(), 'r');
+    QTRY_COMPARE(spy.count(), 1);
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
