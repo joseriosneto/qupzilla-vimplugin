@@ -33,11 +33,14 @@ class VimPluginTests : public QObject
     private slots:
         void initTestCase()
         {
-            int argc = 1;
+            int argc = 2;
             char *argv[argc];
 
             argv[0] =
                 ((QByteArray) QString("VimPluginTests").toLatin1()).data();
+            /* Avoid messing the current profile. */
+            argv[1] =
+                ((QByteArray) QString( "--private-browsing").toLatin1()).data();
             m_app = new MainApplication(argc, argv);
 
             /* QupZilla has some 'postLaunch' initialization functions that are
@@ -63,6 +66,8 @@ class VimPluginTests : public QObject
 
         void cleanupTestCase()
         {
+            m_app->quitApplication();
+            QTest::qWait(1000);
             delete m_app;
         }
 
