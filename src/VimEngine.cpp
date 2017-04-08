@@ -18,9 +18,9 @@
 
 #include "VimEngine.h"
 
-int VimEngine::m_single_step = 9;
-int VimEngine::m_single_step_interval = 15;
-int VimEngine::m_num_scroll_steps = 7;
+const int VimEngine::m_single_step = 9;
+const int VimEngine::m_single_step_interval = 15;
+const int VimEngine::m_num_scroll_steps = 7;
 
 VimEngine::VimEngine()
     : m_g_pressed(false)
