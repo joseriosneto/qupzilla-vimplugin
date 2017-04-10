@@ -25,6 +25,7 @@
 #include "tabbedwebview.h"
 #include "webpage.h"
 #include "pluginproxy.h"
+#include "tabwidget.h"
 
 class VimPluginTests : public QObject
 {
@@ -87,6 +88,9 @@ class VimPluginTests : public QObject
         void ScrollHalfViewportDownWithLowerCaseD();
 
         void ReloadPageWithLowerCaseR();
+
+        void TabIterationOnShiftJK_data();
+        void TabIterationOnShiftJK();
 
     private:
         void loadTestPage(const QString &url, WebView **view)
@@ -427,6 +431,53 @@ void VimPluginTests::ReloadPageWithLowerCaseR()
     QSignalSpy spy(view, SIGNAL(loadStarted()));
     QTest::keyClick(view->parentWidget(), 'r');
     QTRY_COMPARE(spy.count(), 1);
+}
+
+void VimPluginTests::TabIterationOnShiftJK_data()
+{
+    QTest::addColumn<QTestEventList>("key_event");
+    QTest::addColumn<int>("expected_tab_count");
+    QTest::addColumn<int>("expected_current_tab");
+
+    QTestEventList key_K;
+    key_K.addKeyClicks("K");
+    QTest::newRow("next tab on 'K'") << key_K << 2 << 1;
+
+    QTestEventList key_J;
+    key_J.addKeyClicks("J");
+    QTest::newRow("previous tab on 'J'") << key_J << 2 << 1;
+}
+
+void VimPluginTests::TabIterationOnShiftJK()
+{
+    QFETCH(QTestEventList, key_event);
+    QFETCH(int, expected_tab_count);
+    QFETCH(int, expected_current_tab);
+
+    WebView *view = nullptr;
+    QString test_page("file:///" + QCoreApplication::applicationDirPath()
+            + "/pages/long_page_w5000px_h5000px.html");
+    TabWidget* tab_widget = nullptr;
+
+    loadTestPage(test_page, &view);
+
+    int initial_tab_count = 1;
+    int initial_tab = 0;
+    tab_widget =
+        static_cast<TabbedWebView *>(view)->browserWindow()->tabWidget();
+
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
+    QTRY_COMPARE(tab_widget->currentIndex(), initial_tab);
+    tab_widget->addView(QUrl(test_page), Qz::NT_CleanSelectedTabAtTheEnd);
+    tab_widget->setCurrentIndex(initial_tab);
+    QTRY_COMPARE(tab_widget->normalTabsCount(), expected_tab_count);
+    QTRY_COMPARE(tab_widget->currentIndex(), initial_tab);
+
+    key_event.simulate(view->parentWidget());
+    QTRY_COMPARE(tab_widget->currentIndex(), expected_current_tab);
+
+    tab_widget->closeAllButCurrent(initial_tab);
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication

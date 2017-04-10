@@ -19,6 +19,9 @@
 #include "VimEngine.h"
 
 #include "webview.h"
+#include "browserwindow.h"
+#include "tabbedwebview.h"
+#include "tabwidget.h"
 
 const int VimEngine::m_single_step = 9;
 const int VimEngine::m_single_step_interval = 15;
@@ -50,8 +53,18 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
         goto end;
     }
 
+    if ("J" == event->text()) {
+        previousTab();
+        goto end;
+    }
+
     if ("k" == event->text()) {
         startScroll(0, -1 * m_single_step);
+        goto end;
+    }
+
+    if ("K" == event->text()) {
+        nextTab();
         goto end;
     }
 
@@ -195,4 +208,22 @@ void VimEngine::startFullVerticalScroll(int scroll_step_size)
     m_scroll_hor = 0;
     m_scroll_vert = scroll_step_size;
     m_scroll_timer.start();
+}
+
+void VimEngine::nextTab()
+{
+    TabbedWebView *tab_view = dynamic_cast<TabbedWebView*>(m_page->view());
+    if (!tab_view || !tab_view->browserWindow())
+        return;
+
+    tab_view->browserWindow()->tabWidget()->nextTab();
+}
+
+void VimEngine::previousTab()
+{
+    TabbedWebView *tab_view = dynamic_cast<TabbedWebView*>(m_page->view());
+    if (!tab_view || !tab_view->browserWindow())
+        return;
+
+    tab_view->browserWindow()->tabWidget()->previousTab();
 }
