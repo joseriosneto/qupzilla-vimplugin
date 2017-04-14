@@ -35,6 +35,13 @@ class VimEngine : public QObject
         void handleKeyReleaseEvent(WebPage *page, QKeyEvent *event);
 
 #ifdef VIM_PLUGIN_TESTS
+        void init()
+        {
+            stopScroll();
+            m_g_pressed = false;
+            m_page = nullptr;
+        }
+
         const QTimer* scrollTimer() const
         {
             return &m_scroll_timer;

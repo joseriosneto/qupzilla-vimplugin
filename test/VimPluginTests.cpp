@@ -53,7 +53,6 @@ class VimPluginTests : public QObject
              */
             QTestEventLoop::instance().enterLoop(1);
 
-            /* Get VimPlugin reference. */
             m_vim_plugin = nullptr;
             foreach (auto plugin, mApp->plugins()->getAvailablePlugins()) {
                 m_vim_plugin = dynamic_cast<VimPlugin*>(plugin.instance);
@@ -64,14 +63,15 @@ class VimPluginTests : public QObject
             if (!m_vim_plugin)
                 QFAIL("VimPlugin is not loaded in current QupZilla's profile!");
 
-            /* Copying all resources to temporary locations */
+            /* Copying resource test pages to "tmp" in order to make them
+             * accessible to QUrl afterwards.
+             */
             QFile::copy(":/vimplugin/w5000px_h5000px.html",
                     "/tmp/w5000px_h5000px.html");
         }
 
         void cleanupTestCase()
         {
-            /* Remove tmp files */
             QFile::remove("/tmp/w5000px_h5000px.html");
 
             m_app->quitApplication();
@@ -81,7 +81,7 @@ class VimPluginTests : public QObject
 
         void init()
         {
-            /* Load the test page on the beginning of each test */
+            m_vim_plugin->init();
             loadTestPage("w5000px_h5000px.html");
         }
 
@@ -271,8 +271,7 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
         << VimEngine::numSteps();
 
     QTestEventList keys_gjg_dont_scroll_top;
-    /* Last 'a' to clean the state and not affect the next test. */
-    keys_gjg_dont_scroll_top.addKeyClicks("gjga");
+    keys_gjg_dont_scroll_top.addKeyClicks("gjg");
     QTest::newRow("dont scroll to top with 'gjg' (vim key between 'g's")
         << keys_gjg_dont_scroll_top
         << QPointF(initial_x, initial_y + VimEngine::scrollSizeWithHJKL())

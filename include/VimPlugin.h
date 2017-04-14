@@ -42,6 +42,11 @@ class VimPlugin : public QObject, public PluginInterface
                 QKeyEvent* event);
 
 #ifdef VIM_PLUGIN_TESTS
+        void init()
+        {
+            m_vim_engine.init();
+        }
+
         const VimEngine& vimEngine() const
         {
             return m_vim_engine;
