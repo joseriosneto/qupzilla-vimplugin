@@ -63,13 +63,39 @@ class VimPluginTests : public QObject
 
             if (!m_vim_plugin)
                 QFAIL("VimPlugin is not loaded in current QupZilla's profile!");
+
+            /* Copying all resources to temporary locations */
+            QFile::copy(":/vimplugin/w5000px_h5000px.html",
+                    "/tmp/w5000px_h5000px.html");
         }
 
         void cleanupTestCase()
         {
+            /* Remove tmp files */
+            QFile::remove("/tmp/w5000px_h5000px.html");
+
             m_app->quitApplication();
             QTest::qWait(1000);
             delete m_app;
+        }
+
+        void init()
+        {
+            /* Load the test page on the beginning of each test */
+            loadTestPage("w5000px_h5000px.html");
+        }
+
+        void cleanup()
+        {
+            /* Create a new tab and close the current one. This is done
+             * in order to avoid as much as possible dependencies among
+             * tests.
+             */
+            BrowserWindow *window = m_app->getWindow();
+            TabWidget *tab_widget = window->tabWidget();
+            tab_widget->addView(QUrl(), Qz::NT_CleanSelectedTabAtTheEnd);
+            tab_widget->setCurrentIndex(1);
+            tab_widget->closeAllButCurrent(1);
         }
 
         void PluginSpecHasCorrectData();
@@ -93,7 +119,7 @@ class VimPluginTests : public QObject
         void TabIterationOnShiftJK();
 
     private:
-        void loadTestPage(const QString &url, WebView **view)
+        void loadTestPage(const QString &page)
         {
             QTRY_VERIFY(m_app->getWindow());
             BrowserWindow *window = m_app->getWindow();
@@ -105,13 +131,14 @@ class VimPluginTests : public QObject
             QTest::qWaitForWindowExposed(tab_view);
 
             QSignalSpy loadSpy(tab_view->page(), SIGNAL(loadFinished(bool)));
-            tab_view->load(QUrl(url));
+            tab_view->load(QUrl::fromLocalFile("/tmp/" + page));
             QTRY_COMPARE(loadSpy.count(), 1);
 
-            (*view) = tab_view;
+            m_cur_view = tab_view;
         }
 
         MainApplication *m_app;
+        WebView *m_cur_view;
         VimPlugin *m_vim_plugin;
 };
 
@@ -211,26 +238,20 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     QFETCH(QPointF, expected_pos);
     QFETCH(int, expected_scroll_steps);
 
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
-
-    loadTestPage(test_page, &view);
-
     qreal initial_x = 1000;
     qreal initial_y = 1000;
 
-    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    key_event.simulate(view->parentWidget());
+    key_event.simulate(m_cur_view->parentWidget());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
 
-    QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
-    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), expected_pos.x());
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), expected_pos.y());
 }
 
 void VimPluginTests::ScrollToTopWithDoubleLowerCaseG_data()
@@ -271,48 +292,36 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
     QFETCH(QPointF, expected_pos);
     QFETCH(int, expected_scroll_steps);
 
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
-
-    loadTestPage(test_page, &view);
-
     qreal initial_x = 100;
     qreal initial_y = 4000;
 
-    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    key_event.simulate(view->parentWidget());
+    key_event.simulate(m_cur_view->parentWidget());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
-    QTRY_COMPARE(view->page()->scrollPosition().x(), expected_pos.x());
-    QTRY_COMPARE(view->page()->scrollPosition().y(), expected_pos.y());
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), expected_pos.x());
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), expected_pos.y());
 }
 
 void VimPluginTests::ScrollToBottomWithCapitalG()
 {
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
-
-    loadTestPage(test_page, &view);
-
     qreal initial_x = 100;
     qreal initial_y = 0;
 
-    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
 
     qreal page_y_offset = 0;
     qreal window_height = 0;
     qreal scroll_height = 0;
 
-    view->page()->runJavaScript(
+    m_cur_view->page()->runJavaScript(
         QString(
             "(function() {"
             "   var res = {"
@@ -332,11 +341,11 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
     QTRY_VERIFY(scroll_height != page_y_offset + window_height);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    QTest::keyClick(view->parentWidget(), 'G');
+    QTest::keyClick(m_cur_view->parentWidget(), 'G');
     QTRY_COMPARE(spy.count(), VimEngine::numSteps());
-    QCOMPARE(view->page()->scrollPosition().x(), qreal(initial_x));
+    QCOMPARE(m_cur_view->page()->scrollPosition().x(), qreal(initial_x));
 
-    view->page()->runJavaScript(
+    m_cur_view->page()->runJavaScript(
         QString("window.pageYOffset"),
         [&page_y_offset](const QVariant& res) {
             page_y_offset = res.toReal();
@@ -346,21 +355,15 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
 
 void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
 {
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
-
-    loadTestPage(test_page, &view);
-
     qreal initial_x = 2000;
     qreal initial_y = 4000;
 
-    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
 
-    int scroll_step_size = view->page()->execJavaScript(
+    int scroll_step_size = m_cur_view->page()->execJavaScript(
             QString("(document.documentElement.clientHeight / 2) / %1")
                 .arg(VimEngine::numSteps())).toInt();
 
@@ -369,32 +372,26 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
      * the javascript request using 'QTest::keyClick' makes keyRelased event
      * to be generated before the scroll being started.
      */
-    QTest::keyPress(view->parentWidget(), 'u');
-    QTest::keyRelease(view->parentWidget(), 'u', Qt::NoModifier, 50);
+    QTest::keyPress(m_cur_view->parentWidget(), 'u');
+    QTest::keyRelease(m_cur_view->parentWidget(), 'u', Qt::NoModifier, 50);
     QTRY_COMPARE(spy.count(), VimEngine::numSteps());
 
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(),
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(),
             initial_y - (VimEngine::numSteps() * scroll_step_size));
 }
 
 void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
 {
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
-
-    loadTestPage(test_page, &view);
-
     qreal initial_x = 100;
     qreal initial_y = 100;
 
-    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
 
-    int scroll_step_size = view->page()->execJavaScript(
+    int scroll_step_size = m_cur_view->page()->execJavaScript(
             QString("(document.documentElement.clientHeight / 2) / %1")
                 .arg(VimEngine::numSteps())).toInt();
 
@@ -403,33 +400,27 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
      * the javascript request using 'QTest::keyClick' makes keyRelased event
      * to be generated before the scroll being started.
      */
-    QTest::keyPress(view->parentWidget(), 'd');
-    QTest::keyRelease(view->parentWidget(), 'd', Qt::NoModifier, 50);
+    QTest::keyPress(m_cur_view->parentWidget(), 'd');
+    QTest::keyRelease(m_cur_view->parentWidget(), 'd', Qt::NoModifier, 50);
     QTRY_COMPARE(spy.count(), VimEngine::numSteps());
 
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(),
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(),
             initial_y + (VimEngine::numSteps() * scroll_step_size));
 }
 
 void VimPluginTests::ReloadPageWithLowerCaseR()
 {
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
-
-    loadTestPage(test_page, &view);
-
     qreal initial_x = 100;
     qreal initial_y = 100;
 
-    view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
+    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
             .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(view->page()->scrollPosition().y(), initial_y);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
+    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
 
-    QSignalSpy spy(view, SIGNAL(loadStarted()));
-    QTest::keyClick(view->parentWidget(), 'r');
+    QSignalSpy spy(m_cur_view, SIGNAL(loadStarted()));
+    QTest::keyClick(m_cur_view->parentWidget(), 'r');
     QTRY_COMPARE(spy.count(), 1);
 }
 
@@ -454,30 +445,24 @@ void VimPluginTests::TabIterationOnShiftJK()
     QFETCH(int, expected_tab_count);
     QFETCH(int, expected_current_tab);
 
-    WebView *view = nullptr;
-    QString test_page("file:///" + QCoreApplication::applicationDirPath()
-            + "/pages/long_page_w5000px_h5000px.html");
+    QString test_page("w5000px_h5000px.html");
     TabWidget* tab_widget = nullptr;
-
-    loadTestPage(test_page, &view);
 
     int initial_tab_count = 1;
     int initial_tab = 0;
     tab_widget =
-        static_cast<TabbedWebView *>(view)->browserWindow()->tabWidget();
+        static_cast<TabbedWebView *>(m_cur_view)->browserWindow()->tabWidget();
 
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
     QTRY_COMPARE(tab_widget->currentIndex(), initial_tab);
-    tab_widget->addView(QUrl(test_page), Qz::NT_CleanSelectedTabAtTheEnd);
+    tab_widget->addView(QUrl::fromLocalFile("/tmp/" + test_page),
+            Qz::NT_CleanSelectedTabAtTheEnd);
     tab_widget->setCurrentIndex(initial_tab);
     QTRY_COMPARE(tab_widget->normalTabsCount(), expected_tab_count);
     QTRY_COMPARE(tab_widget->currentIndex(), initial_tab);
 
-    key_event.simulate(view->parentWidget());
+    key_event.simulate(m_cur_view->parentWidget());
     QTRY_COMPARE(tab_widget->currentIndex(), expected_current_tab);
-
-    tab_widget->closeAllButCurrent(initial_tab);
-    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
