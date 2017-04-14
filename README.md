@@ -29,3 +29,5 @@ Navigating the current page:
     d       scroll down half a page
     u       scroll up half a page
     r       reload page
+    J       previous tab
+    K       next tab
