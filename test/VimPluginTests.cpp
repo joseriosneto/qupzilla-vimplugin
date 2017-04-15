@@ -94,8 +94,8 @@ class VimPluginTests : public QObject
             BrowserWindow *window = m_app->getWindow();
             TabWidget *tab_widget = window->tabWidget();
             tab_widget->addView(QUrl(), Qz::NT_CleanSelectedTabAtTheEnd);
-            tab_widget->setCurrentIndex(1);
-            tab_widget->closeAllButCurrent(1);
+            tab_widget->setCurrentIndex(tab_widget->lastTabIndex());
+            tab_widget->closeAllButCurrent(tab_widget->lastTabIndex());
         }
 
         void PluginSpecHasCorrectData();
