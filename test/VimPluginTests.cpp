@@ -140,6 +140,14 @@ class VimPluginTests : public QObject
             m_cur_view = tab_view;
         }
 
+        void setPagePosition(qreal x, qreal y)
+        {
+            m_cur_view->page()->runJavaScript(
+                    QString("window.scrollTo(%1, %2);").arg(x).arg(y));
+            QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), x);
+            QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), y);
+        }
+
         MainApplication *m_app;
         WebView *m_cur_view;
         VimPlugin *m_vim_plugin;
@@ -273,13 +281,7 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     QFETCH(QPointF, expected_pos);
     QFETCH(int, expected_scroll_steps);
 
-    qreal initial_x = 1000;
-    qreal initial_y = 1000;
-
-    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
-            .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
+    setPagePosition(1000, 1000);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     key_event.simulate(m_cur_view->parentWidget());
@@ -326,13 +328,7 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
     QFETCH(QPointF, expected_pos);
     QFETCH(int, expected_scroll_steps);
 
-    qreal initial_x = 100;
-    qreal initial_y = 4000;
-
-    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
-            .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
+    setPagePosition(100, 4000);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     key_event.simulate(m_cur_view->parentWidget());
@@ -345,15 +341,11 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
 {
     qreal initial_x = 100;
     qreal initial_y = 0;
-
-    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
-            .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
-
     qreal page_y_offset = 0;
     qreal window_height = 0;
     qreal scroll_height = 0;
+
+    setPagePosition(initial_x, initial_y);
 
     m_cur_view->page()->runJavaScript(
         QString(
@@ -419,10 +411,7 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
     qreal initial_x = 2000;
     qreal initial_y = 4000;
 
-    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
-            .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
+    setPagePosition(initial_x, initial_y);
 
     int scroll_step_size = m_cur_view->page()->execJavaScript(
             QString("(document.documentElement.clientHeight / 2) / %1")
@@ -469,10 +458,7 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
     qreal initial_x = 100;
     qreal initial_y = 100;
 
-    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
-            .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
+    setPagePosition(initial_x, initial_y);
 
     int scroll_step_size = m_cur_view->page()->execJavaScript(
             QString("(document.documentElement.clientHeight / 2) / %1")
@@ -489,13 +475,7 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
 
 void VimPluginTests::ReloadPageWithLowerCaseR()
 {
-    qreal initial_x = 100;
-    qreal initial_y = 100;
-
-    m_cur_view->page()->runJavaScript(QString("window.scrollTo(%1, %2);")
-            .arg(initial_x).arg(initial_y));
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
-    QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(), initial_y);
+    setPagePosition(100, 100);
 
     QSignalSpy spy(m_cur_view, SIGNAL(loadStarted()));
     QTest::keyClick(m_cur_view->parentWidget(), 'r');
