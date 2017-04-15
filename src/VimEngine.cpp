@@ -139,32 +139,32 @@ void VimEngine::handleKeyReleaseEvent(WebPage *page, QKeyEvent *event)
 {
     Q_UNUSED(page);
 
-    if ("h" == event->text()) {
+    if (Qt::Key_H == event->key()) {
         m_scroll_active = false;
         return;
     }
 
-    if ("j" == event->text()) {
+    if (Qt::Key_J == event->key()) {
         m_scroll_active = false;
         return;
     }
 
-    if ("k" == event->text()) {
+    if (Qt::Key_K == event->key()) {
         m_scroll_active = false;
         return;
     }
 
-    if ("l" == event->text()) {
+    if (Qt::Key_L == event->key()) {
         m_scroll_active = false;
         return;
     }
 
-    if ("u" == event->text()) {
+    if (Qt::Key_U == event->key()) {
         m_scroll_active = false;
         return;
     }
 
-    if ("d" == event->text()) {
+    if (Qt::Key_D == event->key()) {
         m_scroll_active = false;
         return;
     }

@@ -110,7 +110,10 @@ class VimPluginTests : public QObject
 
         void ScrollToBottomWithCapitalG();
 
+        void ScrollHalfViewportUpWithLowerCaseU_data();
         void ScrollHalfViewportUpWithLowerCaseU();
+
+        void ScrollHalfViewportDownWithLowerCaseD_data();
         void ScrollHalfViewportDownWithLowerCaseD();
 
         void ReloadPageWithLowerCaseR();
@@ -189,6 +192,14 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
         << QPointF(initial_x, initial_y)
         << 0;
 
+    QTestEventList key_h_scroll_once_leftwards;
+    key_h_scroll_once_leftwards.addKeyPress('h');
+    key_h_scroll_once_leftwards.addKeyRelease('H', Qt::ShiftModifier, 20);
+    QTest::newRow("scroll left once when pressing 'h' and releasing shift+H")
+        << key_h_scroll_once_leftwards
+        << QPointF(initial_x - VimEngine::scrollSizeWithHJKL(), initial_y)
+        << VimEngine::numSteps();
+
     QTestEventList key_j_scroll_down;
     key_j_scroll_down.addKeyClicks("j");
     QTest::newRow("scroll down on 'j'")
@@ -202,6 +213,14 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
         << key_J_dont_scroll
         << QPointF(initial_x, initial_y)
         << 0;
+
+    QTestEventList key_j_scroll_once_downwards;
+    key_j_scroll_once_downwards.addKeyPress('j');
+    key_j_scroll_once_downwards.addKeyRelease('J', Qt::ShiftModifier, 20);
+    QTest::newRow("scroll down once when pressing 'j' and releasing shift+J")
+        << key_j_scroll_once_downwards
+        << QPointF(initial_x, initial_y + VimEngine::scrollSizeWithHJKL())
+        << VimEngine::numSteps();
 
     QTestEventList key_k_scroll_up;
     key_k_scroll_up.addKeyClicks("k");
@@ -217,6 +236,14 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
         << QPointF(initial_x, initial_y)
         << 0;
 
+    QTestEventList key_k_scroll_once_upwards;
+    key_k_scroll_once_upwards.addKeyPress('k');
+    key_k_scroll_once_upwards.addKeyRelease('K', Qt::ShiftModifier, 20);
+    QTest::newRow("scroll up once when pressing 'k' and releasing shift+K")
+        << key_k_scroll_once_upwards
+        << QPointF(initial_x, initial_y - VimEngine::scrollSizeWithHJKL())
+        << VimEngine::numSteps();
+
     QTestEventList key_l_scroll_right;
     key_l_scroll_right.addKeyClicks("l");
     QTest::newRow("scroll right on 'l'")
@@ -230,6 +257,14 @@ void VimPluginTests::ScrollNavigationWithHJKL_data()
         << key_L_dont_scroll
         << QPointF(initial_x, initial_y)
         << 0;
+
+    QTestEventList key_l_scroll_once_rightwards;
+    key_l_scroll_once_rightwards.addKeyPress('l');
+    key_l_scroll_once_rightwards.addKeyRelease('L', Qt::ShiftModifier, 20);
+    QTest::newRow("scroll right once when pressing 'l' and releasing shift+L")
+        << key_l_scroll_once_rightwards
+        << QPointF(initial_x + VimEngine::scrollSizeWithHJKL(), initial_y)
+        << VimEngine::numSteps();
 }
 
 void VimPluginTests::ScrollNavigationWithHJKL()
@@ -352,8 +387,35 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
     QTRY_VERIFY(scroll_height == page_y_offset + window_height);
 }
 
+void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU_data()
+{
+    QTest::addColumn<QTestEventList>("key_event");
+    QTest::addColumn<int>("expected_scroll_steps");
+
+    /* It is needed to add a delay time before releasing the key because the
+     * scroll actually starts only after the javascript request in keyPress is
+     * processed.
+     */
+    QTestEventList key_u_scroll_half_page_up;
+    key_u_scroll_half_page_up.addKeyPress('u');
+    key_u_scroll_half_page_up.addKeyRelease('u', Qt::NoModifier, 50);
+    QTest::newRow("scroll half page up on 'u'")
+        << key_u_scroll_half_page_up
+        << VimEngine::numSteps();
+
+    QTestEventList key_u_scroll_once_half_page_up;
+    key_u_scroll_once_half_page_up.addKeyPress('u');
+    key_u_scroll_once_half_page_up.addKeyRelease('U', Qt::ShiftModifier, 50);
+    QTest::newRow("scroll half page up once when pressing 'u' and releasing shift+U")
+        << key_u_scroll_once_half_page_up
+        << VimEngine::numSteps();
+}
+
 void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
 {
+    QFETCH(QTestEventList, key_event);
+    QFETCH(int, expected_scroll_steps);
+
     qreal initial_x = 2000;
     qreal initial_y = 4000;
 
@@ -367,21 +429,43 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
                 .arg(VimEngine::numSteps())).toInt();
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    /* Since the scroll currently starts in VimEngine only after processing
-     * the javascript request using 'QTest::keyClick' makes keyRelased event
-     * to be generated before the scroll being started.
-     */
-    QTest::keyPress(m_cur_view->parentWidget(), 'u');
-    QTest::keyRelease(m_cur_view->parentWidget(), 'u', Qt::NoModifier, 50);
-    QTRY_COMPARE(spy.count(), VimEngine::numSteps());
+    key_event.simulate(m_cur_view->parentWidget());
+    QTRY_COMPARE(spy.count(), expected_scroll_steps);
 
     QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(),
             initial_y - (VimEngine::numSteps() * scroll_step_size));
 }
 
+void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD_data()
+{
+    QTest::addColumn<QTestEventList>("key_event");
+    QTest::addColumn<int>("expected_scroll_steps");
+
+    /* It is needed to add a delay time before releasing the key because the
+     * scroll actually starts only after the javascript request in keyPress is
+     * processed.
+     */
+    QTestEventList key_d_scroll_half_page_down;
+    key_d_scroll_half_page_down.addKeyPress('d');
+    key_d_scroll_half_page_down.addKeyRelease('d', Qt::NoModifier, 50);
+    QTest::newRow("scroll half page down on 'd'")
+        << key_d_scroll_half_page_down
+        << VimEngine::numSteps();
+
+    QTestEventList key_d_scroll_once_half_page_down;
+    key_d_scroll_once_half_page_down.addKeyPress('d');
+    key_d_scroll_once_half_page_down.addKeyRelease('D', Qt::ShiftModifier, 50);
+    QTest::newRow("scroll half page down once when pressing 'd' and releasing shift+D")
+        << key_d_scroll_once_half_page_down
+        << VimEngine::numSteps();
+}
+
 void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
 {
+    QFETCH(QTestEventList, key_event);
+    QFETCH(int, expected_scroll_steps);
+
     qreal initial_x = 100;
     qreal initial_y = 100;
 
@@ -395,13 +479,8 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
                 .arg(VimEngine::numSteps())).toInt();
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    /* Since the scroll currently starts in VimEngine only after processing
-     * the javascript request using 'QTest::keyClick' makes keyRelased event
-     * to be generated before the scroll being started.
-     */
-    QTest::keyPress(m_cur_view->parentWidget(), 'd');
-    QTest::keyRelease(m_cur_view->parentWidget(), 'd', Qt::NoModifier, 50);
-    QTRY_COMPARE(spy.count(), VimEngine::numSteps());
+    key_event.simulate(m_cur_view->parentWidget());
+    QTRY_COMPARE(spy.count(), expected_scroll_steps);
 
     QTRY_COMPARE(m_cur_view->page()->scrollPosition().x(), initial_x);
     QTRY_COMPARE(m_cur_view->page()->scrollPosition().y(),
