@@ -87,26 +87,14 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
     }
 
     if ("u" == event->text()) {
-        page->runJavaScript(
-            QString("(document.documentElement.clientHeight / 2) / %1")
-                .arg(m_num_scroll_steps),
-            [this] (const QVariant &res) {
-                /* I putted the multiplication with -1 here because somehow the
-                 * truncation was different by 1 unit in the tests. This was
-                 * making the tests fail.
-                 */
-                this->startScroll(0, -1 * res.toInt());
-            });
+        const QRect viewport_size = m_page->view()->geometry();
+        startScroll(0, -1 * (viewport_size.height() / 2) / m_num_scroll_steps);
         goto end;
     }
 
     if ("d" == event->text()) {
-        page->runJavaScript(
-            QString("(document.documentElement.clientHeight / 2) / %1")
-                .arg(m_num_scroll_steps),
-            [this] (const QVariant &res) {
-                this->startScroll(0, res.toInt());
-            });
+        const QRect viewport_size = m_page->view()->geometry();
+        startScroll(0, (viewport_size.height() / 2) / m_num_scroll_steps);
         goto end;
     }
 

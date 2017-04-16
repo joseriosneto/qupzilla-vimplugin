@@ -413,9 +413,8 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
 
     setPagePosition(initial_x, initial_y);
 
-    int scroll_step_size = m_cur_view->page()->execJavaScript(
-            QString("(document.documentElement.clientHeight / 2) / %1")
-                .arg(VimEngine::numSteps())).toInt();
+    const QRect viewport_size = m_cur_view->geometry();
+    int scroll_step_size = (viewport_size.height() / 2) / VimEngine::numSteps();
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     key_event.simulate(m_cur_view->parentWidget());
@@ -460,9 +459,8 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
 
     setPagePosition(initial_x, initial_y);
 
-    int scroll_step_size = m_cur_view->page()->execJavaScript(
-            QString("(document.documentElement.clientHeight / 2) / %1")
-                .arg(VimEngine::numSteps())).toInt();
+    const QRect viewport_size = m_cur_view->geometry();
+    int scroll_step_size = (viewport_size.height() / 2) / VimEngine::numSteps();
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
     key_event.simulate(m_cur_view->parentWidget());
