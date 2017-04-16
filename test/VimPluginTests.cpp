@@ -87,9 +87,8 @@ class VimPluginTests : public QObject
 
         void cleanup()
         {
-            /* Create a new tab and close the current one. This is done
-             * in order to avoid as much as possible dependencies among
-             * tests.
+            /* Create a new tab and close all others. This is done to
+             * avoid dependencies among tests as much as possible.
              */
             BrowserWindow *window = m_app->getWindow();
             TabWidget *tab_widget = window->tabWidget();
