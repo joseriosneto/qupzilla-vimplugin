@@ -383,20 +383,15 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU_data()
     QTest::addColumn<QTestEventList>("key_event");
     QTest::addColumn<int>("expected_scroll_steps");
 
-    /* It is needed to add a delay time before releasing the key because the
-     * scroll actually starts only after the javascript request in keyPress is
-     * processed.
-     */
     QTestEventList key_u_scroll_half_page_up;
-    key_u_scroll_half_page_up.addKeyPress('u');
-    key_u_scroll_half_page_up.addKeyRelease('u', Qt::NoModifier, 50);
+    key_u_scroll_half_page_up.addKeyClicks("u");
     QTest::newRow("scroll half page up on 'u'")
         << key_u_scroll_half_page_up
         << VimEngine::numSteps();
 
     QTestEventList key_u_scroll_once_half_page_up;
     key_u_scroll_once_half_page_up.addKeyPress('u');
-    key_u_scroll_once_half_page_up.addKeyRelease('U', Qt::ShiftModifier, 50);
+    key_u_scroll_once_half_page_up.addKeyRelease('U', Qt::ShiftModifier);
     QTest::newRow("scroll half page up once when pressing 'u' and releasing shift+U")
         << key_u_scroll_once_half_page_up
         << VimEngine::numSteps();
@@ -429,20 +424,15 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD_data()
     QTest::addColumn<QTestEventList>("key_event");
     QTest::addColumn<int>("expected_scroll_steps");
 
-    /* It is needed to add a delay time before releasing the key because the
-     * scroll actually starts only after the javascript request in keyPress is
-     * processed.
-     */
     QTestEventList key_d_scroll_half_page_down;
-    key_d_scroll_half_page_down.addKeyPress('d');
-    key_d_scroll_half_page_down.addKeyRelease('d', Qt::NoModifier, 50);
+    key_d_scroll_half_page_down.addKeyClicks("d");
     QTest::newRow("scroll half page down on 'd'")
         << key_d_scroll_half_page_down
         << VimEngine::numSteps();
 
     QTestEventList key_d_scroll_once_half_page_down;
     key_d_scroll_once_half_page_down.addKeyPress('d');
-    key_d_scroll_once_half_page_down.addKeyRelease('D', Qt::ShiftModifier, 50);
+    key_d_scroll_once_half_page_down.addKeyRelease('D', Qt::ShiftModifier);
     QTest::newRow("scroll half page down once when pressing 'd' and releasing shift+D")
         << key_d_scroll_once_half_page_down
         << VimEngine::numSteps();
