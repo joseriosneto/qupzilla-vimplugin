@@ -111,12 +111,16 @@ class VimPluginTests : public QObject
              *                      another guard to avoid leaving unwanted
              *                      files after tests.
              *
+             * --no-remote:         avoid being affected by others running
+             *                      QupZilla instances.
+             *
              * --profile:           load only VimPlugin extension and avoid
              *                      messing current profile.
              */
             char *argv[] = {
                 qstrdup("qupzilla"),
                 qstrdup("--private-browsing"),
+                qstrdup("--no-remote"),
                 qstrdup("--profile=" TEST_PROFILE)
             };
             int argc = sizeof(argv) / sizeof(argv[0]);
