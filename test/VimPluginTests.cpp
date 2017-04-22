@@ -50,8 +50,9 @@ class VimPluginTests : public QObject
 
         void cleanupTestCase()
         {
-            m_app->quitApplication();
-            QTest::qWait(1000);
+            QSignalSpy spy(m_app->getWindow(), SIGNAL(destroyed(QObject*)));
+            QCoreApplication::postEvent(m_app->getWindow(), new QCloseEvent);
+            spy.wait(1000);
             delete m_app;
 
             QFile::remove("/tmp/w5000px_h5000px.html");
