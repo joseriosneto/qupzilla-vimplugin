@@ -11,6 +11,7 @@ CONFIG += testcase
 OBJECTS_DIR = ../build
 MOC_DIR = ../build
 RCC_DIR = ../build
+DESTDIR = ../build
 
 HEADERS += ../include/VimPlugin.h \
            ../include/VimEngine.h

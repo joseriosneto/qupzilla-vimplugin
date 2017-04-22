@@ -22,11 +22,11 @@ QT += webenginewidgets
 
 TEMPLATE = lib
 CONFIG += plugin
-DESTDIR = $$qupzilla_src_dir/bin/plugins/
 
 OBJECTS_DIR = build
 MOC_DIR = build
 RCC_DIR = build
+DESTDIR = build
 
 HEADERS += include/VimPlugin.h \
            include/VimEngine.h

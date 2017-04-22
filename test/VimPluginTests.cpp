@@ -26,6 +26,10 @@
 #include "webpage.h"
 #include "pluginproxy.h"
 #include "tabwidget.h"
+#include "settings.h"
+#include "datapaths.h"
+
+#define TEST_PROFILE "VimPluginTests"
 
 class VimPluginTests : public QObject
 {
@@ -34,34 +38,8 @@ class VimPluginTests : public QObject
     private slots:
         void initTestCase()
         {
-            int argc = 2;
-            char *argv[argc];
-
-            argv[0] =
-                ((QByteArray) QString("VimPluginTests").toLatin1()).data();
-            /* Avoid messing the current profile. */
-            argv[1] =
-                ((QByteArray) QString( "--private-browsing").toLatin1()).data();
-            m_app = new MainApplication(argc, argv);
-
-            /* QupZilla has some 'postLaunch' initialization functions that are
-             * posted in event loop queue to be processed on the next(s)
-             * iteration(s). The QTRY_* macros though do not process GUI and
-             * Qwidgets events since it use QCoreApplication for processing
-             * this. We need then to run a GUI event loop here to correctly
-             * initialize application.
-             */
-            QTestEventLoop::instance().enterLoop(1);
-
-            m_vim_plugin = nullptr;
-            foreach (auto plugin, mApp->plugins()->getAvailablePlugins()) {
-                m_vim_plugin = dynamic_cast<VimPlugin*>(plugin.instance);
-                if (m_vim_plugin)
-                    break;
-            }
-
-            if (!m_vim_plugin)
-                QFAIL("VimPlugin is not loaded in current QupZilla's profile!");
+            startMainApplication();
+            loadVimPlugin();
 
             /* Copying resource test pages to "tmp" in order to make them
              * accessible to QUrl afterwards.
@@ -72,11 +50,12 @@ class VimPluginTests : public QObject
 
         void cleanupTestCase()
         {
-            QFile::remove("/tmp/w5000px_h5000px.html");
-
             m_app->quitApplication();
             QTest::qWait(1000);
             delete m_app;
+
+            QFile::remove("/tmp/w5000px_h5000px.html");
+            m_test_profile_dir.removeRecursively();
         }
 
         void init()
@@ -121,6 +100,68 @@ class VimPluginTests : public QObject
         void TabIterationOnShiftJK();
 
     private:
+        void startMainApplication()
+        {
+            /* The main idea on these args are to (a) avoid tests be affected by
+             * other extensions and (b) other running instances of QupZilla, and
+             * (c) avoid leaving unnecessary files in filesystem after tests.
+             *
+             * --private-browsing:  it might be redundant since a custom profile
+             *                      is being used for tests but at least it is
+             *                      another guard to avoid leaving unwanted
+             *                      files after tests.
+             *
+             * --profile:           load only VimPlugin extension and avoid
+             *                      messing current profile.
+             */
+            char *argv[] = {
+                qstrdup("qupzilla"),
+                qstrdup("--private-browsing"),
+                qstrdup("--profile=" TEST_PROFILE)
+            };
+            int argc = sizeof(argv) / sizeof(argv[0]);
+
+            m_app = new MainApplication(argc, argv);
+
+            /* QupZilla has some 'postLaunch' initialization functions that are
+             * posted in event loop queue to be processed on the next(s)
+             * iteration(s).
+             */
+            QTestEventLoop::instance().enterLoop(1);
+
+            for (int i = 0; i < argc; ++i)
+                free(argv[i]);
+        }
+
+        void loadVimPlugin()
+        {
+            QFileInfo lib_plugin(QCoreApplication::applicationDirPath()
+                    + "/libVimPlugin.so");
+
+            m_test_profile_dir.setPath(DataPaths::currentProfilePath()
+                    + TEST_PROFILE);
+
+            Settings settings;
+            settings.beginGroup("Plugin-Settings");
+            settings.setValue("EnablePlugins", true);
+            settings.setValue("AllowedPlugins", lib_plugin.absoluteFilePath());
+            settings.endGroup();
+            settings.syncSettings();
+
+            m_app->plugins()->loadSettings();
+            m_app->plugins()->loadPlugins();
+
+            m_vim_plugin = nullptr;
+            foreach (auto plugin, mApp->plugins()->getAvailablePlugins()) {
+                m_vim_plugin = dynamic_cast<VimPlugin*>(plugin.instance);
+                if (m_vim_plugin)
+                    break;
+            }
+
+            if (!m_vim_plugin)
+                QFAIL("VimPlugin is not loaded in current QupZilla's profile!");
+        }
+
         void loadTestPage(const QString &page)
         {
             QTRY_VERIFY(m_app->getWindow());
@@ -150,6 +191,7 @@ class VimPluginTests : public QObject
         MainApplication *m_app;
         WebView *m_cur_view;
         VimPlugin *m_vim_plugin;
+        QDir m_test_profile_dir;
 };
 
 void VimPluginTests::PluginSpecHasCorrectData()
