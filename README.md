@@ -34,3 +34,4 @@ Tabs:
 
     J       previous tab
     K       next tab
+    x       close current tab
