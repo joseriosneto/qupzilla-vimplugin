@@ -30,6 +30,8 @@
 #include "datapaths.h"
 
 #define TEST_PROFILE "VimPluginTests"
+#define TEST_PAGE "w5000px_h5000px.html"
+#define TEST_PAGE_FILEPATH "/tmp/" TEST_PAGE
 
 class VimPluginTests : public QObject
 {
@@ -44,8 +46,7 @@ class VimPluginTests : public QObject
             /* Copying resource test pages to "tmp" in order to make them
              * accessible to QUrl afterwards.
              */
-            QFile::copy(":/vimplugin/w5000px_h5000px.html",
-                    "/tmp/w5000px_h5000px.html");
+            QFile::copy(":/vimplugin/" TEST_PAGE, TEST_PAGE_FILEPATH);
         }
 
         void cleanupTestCase()
@@ -55,14 +56,14 @@ class VimPluginTests : public QObject
             spy.wait(1000);
             delete m_app;
 
-            QFile::remove("/tmp/w5000px_h5000px.html");
+            QFile::remove(TEST_PAGE_FILEPATH);
             m_test_profile_dir.removeRecursively();
         }
 
         void init()
         {
             m_vim_plugin->init();
-            loadTestPage("w5000px_h5000px.html");
+            loadTestPage();
         }
 
         void cleanup()
@@ -169,7 +170,7 @@ class VimPluginTests : public QObject
                 QFAIL("VimPlugin is not loaded in current QupZilla's profile!");
         }
 
-        void loadTestPage(const QString &page)
+        void loadTestPage()
         {
             QTRY_VERIFY(m_app->getWindow());
             BrowserWindow *window = m_app->getWindow();
@@ -181,7 +182,7 @@ class VimPluginTests : public QObject
             QTest::qWaitForWindowExposed(tab_view);
 
             QSignalSpy loadSpy(tab_view->page(), SIGNAL(loadFinished(bool)));
-            tab_view->load(QUrl::fromLocalFile("/tmp/" + page));
+            tab_view->load(QUrl::fromLocalFile(TEST_PAGE_FILEPATH));
             QTRY_COMPARE(loadSpy.count(), 1);
 
             m_cur_view = tab_view;
@@ -539,7 +540,6 @@ void VimPluginTests::TabIterationOnShiftJK()
     QFETCH(int, expected_tab_count);
     QFETCH(int, expected_current_tab);
 
-    QString test_page("w5000px_h5000px.html");
     TabWidget* tab_widget = nullptr;
 
     int initial_tab_count = 1;
@@ -549,7 +549,7 @@ void VimPluginTests::TabIterationOnShiftJK()
 
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
     QTRY_COMPARE(tab_widget->currentIndex(), initial_tab);
-    tab_widget->addView(QUrl::fromLocalFile("/tmp/" + test_page),
+    tab_widget->addView(QUrl::fromLocalFile(TEST_PAGE_FILEPATH),
             Qz::NT_CleanSelectedTabAtTheEnd);
     tab_widget->setCurrentIndex(initial_tab);
     QTRY_COMPARE(tab_widget->normalTabsCount(), expected_tab_count);
@@ -561,7 +561,6 @@ void VimPluginTests::TabIterationOnShiftJK()
 
 void VimPluginTests::CloseCurTabOnLowerCaseX()
 {
-    QString test_page("w5000px_h5000px.html");
     TabWidget* tab_widget = nullptr;
 
     int initial_tab_count = 1;
@@ -569,7 +568,7 @@ void VimPluginTests::CloseCurTabOnLowerCaseX()
         static_cast<TabbedWebView *>(m_cur_view)->browserWindow()->tabWidget();
 
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
-    tab_widget->addView(QUrl::fromLocalFile("/tmp/" + test_page),
+    tab_widget->addView(QUrl::fromLocalFile(TEST_PAGE_FILEPATH),
             Qz::NT_CleanSelectedTabAtTheEnd);
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count + 1);
 
