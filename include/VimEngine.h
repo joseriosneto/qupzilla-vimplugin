@@ -77,6 +77,7 @@ class VimEngine : public QObject
         void stopScroll();
         void nextTab();
         void previousTab();
+        void closeCurTab();
 
         static const int m_single_step;
         static const int m_single_step_interval;

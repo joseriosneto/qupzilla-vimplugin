@@ -100,6 +100,8 @@ class VimPluginTests : public QObject
         void TabIterationOnShiftJK_data();
         void TabIterationOnShiftJK();
 
+        void CloseCurTabOnLowerCaseX();
+
     private:
         void startMainApplication()
         {
@@ -555,6 +557,24 @@ void VimPluginTests::TabIterationOnShiftJK()
 
     key_event.simulate(m_cur_view->parentWidget());
     QTRY_COMPARE(tab_widget->currentIndex(), expected_current_tab);
+}
+
+void VimPluginTests::CloseCurTabOnLowerCaseX()
+{
+    QString test_page("w5000px_h5000px.html");
+    TabWidget* tab_widget = nullptr;
+
+    int initial_tab_count = 1;
+    tab_widget =
+        static_cast<TabbedWebView *>(m_cur_view)->browserWindow()->tabWidget();
+
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
+    tab_widget->addView(QUrl::fromLocalFile("/tmp/" + test_page),
+            Qz::NT_CleanSelectedTabAtTheEnd);
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count + 1);
+
+    QTest::keyClick(m_cur_view->parentWidget(), 'x');
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication
