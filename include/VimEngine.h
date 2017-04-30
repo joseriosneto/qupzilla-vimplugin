@@ -68,6 +68,9 @@ class VimEngine : public QObject
         }
 #endif
 
+    public slots:
+        void stopScrollingIfPageWasDeleted(WebPage *deleted_page);
+
     private slots:
         void scroll();
 

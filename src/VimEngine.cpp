@@ -163,6 +163,14 @@ void VimEngine::handleKeyReleaseEvent(WebPage *page, QKeyEvent *event)
     }
 }
 
+void VimEngine::stopScrollingIfPageWasDeleted(WebPage *deleted_page)
+{
+    if (m_page == deleted_page) {
+        stopScroll();
+        m_page = nullptr;
+    }
+}
+
 void VimEngine::scroll()
 {
     static int step_i = 0;

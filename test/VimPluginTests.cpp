@@ -103,6 +103,8 @@ class VimPluginTests : public QObject
 
         void CloseCurTabOnLowerCaseX();
 
+        void StopScrollingWhenPageIsClosed();
+
     private:
         void startMainApplication()
         {
@@ -573,6 +575,29 @@ void VimPluginTests::CloseCurTabOnLowerCaseX()
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count + 1);
 
     QTest::keyClick(m_cur_view->parentWidget(), 'x');
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
+}
+
+void VimPluginTests::StopScrollingWhenPageIsClosed()
+{
+    TabWidget* tab_widget = nullptr;
+
+    int initial_tab_count = 1;
+    tab_widget =
+        static_cast<TabbedWebView *>(m_cur_view)->browserWindow()->tabWidget();
+
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
+    tab_widget->addView(QUrl::fromLocalFile(TEST_PAGE_FILEPATH),
+            Qz::NT_CleanSelectedTabAtTheEnd);
+    QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count + 1);
+
+    QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
+    /* For some reason QupZilla sends me the first tab page in KeyPress here.
+     * Not sure why yet. It is needed then to close the first tab to simulate
+     * the desired behaviour.
+     */
+    QTest::keyPress(m_cur_view->parentWidget(), 'j');
+    tab_widget->requestCloseTab(0);
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
 }
 
