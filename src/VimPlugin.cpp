@@ -31,6 +31,10 @@ VimPlugin::VimPlugin()
 {
 }
 
+VimPlugin::~VimPlugin()
+{
+}
+
 PluginSpec VimPlugin::pluginSpec()
 {
     PluginSpec spec;

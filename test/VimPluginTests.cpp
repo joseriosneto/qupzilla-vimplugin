@@ -145,13 +145,10 @@ class VimPluginTests : public QObject
 
         void loadVimPlugin()
         {
-            QFileInfo lib_plugin(QCoreApplication::applicationDirPath()
-                    + "/libVimPlugin.so");
-
             Settings settings;
             settings.beginGroup("Plugin-Settings");
             settings.setValue("EnablePlugins", true);
-            settings.setValue("AllowedPlugins", lib_plugin.absoluteFilePath());
+            settings.setValue("AllowedPlugins", LIB_VIM_PLUGIN);
             settings.endGroup();
             settings.syncSettings();
 
@@ -160,9 +157,14 @@ class VimPluginTests : public QObject
 
             m_vim_plugin = nullptr;
             foreach (auto plugin, mApp->plugins()->getAvailablePlugins()) {
-                m_vim_plugin = dynamic_cast<VimPlugin*>(plugin.instance);
-                if (m_vim_plugin)
+                /* For some reason 'dynamic_cast' is not working here
+                 * in mac os x. Seems the same problem as:
+                 * http://googleshortener.com/UF14r
+                 */
+                if (plugin.pluginSpec.name == "Vim plugin") {
+                    m_vim_plugin = static_cast<VimPlugin*>(plugin.instance);
                     break;
+                }
             }
 
             if (!m_vim_plugin)

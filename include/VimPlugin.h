@@ -30,6 +30,7 @@ class VimPlugin : public QObject, public PluginInterface
 
     public:
         explicit VimPlugin();
+        ~VimPlugin();
 
         PluginSpec pluginSpec();
         void init(InitState state, const QString &settingsPath);
