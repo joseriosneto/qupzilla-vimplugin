@@ -2,5 +2,6 @@
     <qresource prefix="/vimplugin">
         <file>data/vim-logo-en.png</file>
         <file alias="w5000px_h5000px.html">test/pages/long_page_w5000px_h5000px.html</file>
+        <file alias="page_2.html">test/pages/page_2.html</file>
     </qresource>
 </RCC>

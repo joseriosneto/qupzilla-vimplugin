@@ -31,7 +31,9 @@
 
 #define TEST_PROFILE "VimPluginTests"
 #define TEST_PAGE "w5000px_h5000px.html"
+#define TEST_PAGE_2 "page_2.html"
 #define TEST_PAGE_FILEPATH "/tmp/" TEST_PAGE
+#define TEST_PAGE_2_FILEPATH "/tmp/" TEST_PAGE_2
 
 class VimPluginTests : public QObject
 {
@@ -47,6 +49,7 @@ class VimPluginTests : public QObject
              * accessible to QUrl afterwards.
              */
             QFile::copy(":/vimplugin/" TEST_PAGE, TEST_PAGE_FILEPATH);
+            QFile::copy(":/vimplugin/" TEST_PAGE_2, TEST_PAGE_2_FILEPATH);
         }
 
         void cleanupTestCase()
@@ -57,7 +60,8 @@ class VimPluginTests : public QObject
             delete m_app;
 
             QFile::remove(TEST_PAGE_FILEPATH);
-            m_test_profile_dir.removeRecursively();
+            QFile::remove(TEST_PAGE_2_FILEPATH);
+            QDir(DataPaths::currentProfilePath()).removeRecursively();
         }
 
         void init()
@@ -105,17 +109,14 @@ class VimPluginTests : public QObject
 
         void StopScrollingWhenPageIsClosed();
 
+        void RestoreClosedTabOnCapitalX();
+
     private:
         void startMainApplication()
         {
             /* The main idea on these args are to (a) avoid tests be affected by
              * other extensions and (b) other running instances of QupZilla, and
              * (c) avoid leaving unnecessary files in filesystem after tests.
-             *
-             * --private-browsing:  it might be redundant since a custom profile
-             *                      is being used for tests but at least it is
-             *                      another guard to avoid leaving unwanted
-             *                      files after tests.
              *
              * --no-remote:         avoid being affected by others running
              *                      QupZilla instances.
@@ -125,7 +126,6 @@ class VimPluginTests : public QObject
              */
             char *argv[] = {
                 qstrdup("qupzilla"),
-                qstrdup("--private-browsing"),
                 qstrdup("--no-remote"),
                 qstrdup("--profile=" TEST_PROFILE)
             };
@@ -147,9 +147,6 @@ class VimPluginTests : public QObject
         {
             QFileInfo lib_plugin(QCoreApplication::applicationDirPath()
                     + "/libVimPlugin.so");
-
-            m_test_profile_dir.setPath(DataPaths::currentProfilePath()
-                    + TEST_PROFILE);
 
             Settings settings;
             settings.beginGroup("Plugin-Settings");
@@ -201,7 +198,6 @@ class VimPluginTests : public QObject
         MainApplication *m_app;
         WebView *m_cur_view;
         VimPlugin *m_vim_plugin;
-        QDir m_test_profile_dir;
 };
 
 void VimPluginTests::PluginSpecHasCorrectData()
@@ -599,6 +595,36 @@ void VimPluginTests::StopScrollingWhenPageIsClosed()
     QTest::keyPress(m_cur_view->parentWidget(), 'j');
     tab_widget->requestCloseTab(0);
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
+}
+
+void VimPluginTests::RestoreClosedTabOnCapitalX()
+{
+    const QUrl url_test_page = QUrl::fromLocalFile(TEST_PAGE_2_FILEPATH);
+    BrowserWindow *browser_window = nullptr;
+    TabWidget* tab_widget = nullptr;
+
+    browser_window = static_cast<TabbedWebView *>(m_cur_view)->browserWindow();
+    tab_widget = browser_window->tabWidget();
+
+    tab_widget->addView(QUrl(), Qz::NT_CleanSelectedTabAtTheEnd);
+    QTRY_VERIFY(browser_window->weView(1));
+
+    QSignalSpy loadSpy(browser_window->weView(1)->page(),
+            SIGNAL(loadFinished(bool)));
+    browser_window->weView(1)->load(url_test_page);
+    QTRY_COMPARE(loadSpy.count(), 1);
+
+    /* Using "requestCloseTab" instead of
+     * "keyClick(browser_window->weView(1)->parentWidget(), 'x')" to avoid any
+     * flaw on 'x' feature break this test.
+     */
+    QSignalSpy changedSpy(tab_widget, SIGNAL(changed()));
+    tab_widget->requestCloseTab(1);
+    QTRY_VERIFY(changedSpy.count() >= 1);
+
+    QTest::keyClick(browser_window->weView()->parentWidget(), 'X');
+    QTRY_COMPARE(tab_widget->normalTabsCount(), 2);
+    QTRY_COMPARE(browser_window->weView(1)->page()->url(), url_test_page);
 }
 
 /* Using "APPLESS" version because MainApplication is already a QApplication

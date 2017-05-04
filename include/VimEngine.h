@@ -81,6 +81,7 @@ class VimEngine : public QObject
         void nextTab();
         void previousTab();
         void closeCurTab();
+        void openLastClosedTab();
 
         static const int m_single_step;
         static const int m_single_step_interval;

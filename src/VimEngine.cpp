@@ -123,6 +123,11 @@ void VimEngine::handleKeyPressEvent(WebPage *page, QKeyEvent *event)
         goto end;
     }
 
+    if ("X" == event->text()) {
+        openLastClosedTab();
+        goto end;
+    }
+
 end:
     m_g_pressed = false;
     return;
@@ -235,4 +240,12 @@ void VimEngine::closeCurTab()
         static_cast<TabbedWebView *>(
                 m_page->view())->browserWindow()->tabWidget();
     tab_widget->requestCloseTab();
+}
+
+void VimEngine::openLastClosedTab()
+{
+    TabWidget* tab_widget =
+        static_cast<TabbedWebView *>(
+                m_page->view())->browserWindow()->tabWidget();
+    tab_widget->restoreClosedTab();
 }
