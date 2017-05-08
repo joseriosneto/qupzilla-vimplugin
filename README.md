@@ -2,13 +2,12 @@
 How awesome is [Vimium](https://github.com/philc/vimium)? This plugin try to port its functionalities to [QupZilla](https://github.com/QupZilla/qupzilla). Have in mind the project is still on its early stages. 
 
 # Compiling
-You need QupZilla's source to compile the code. Export the `QUPZILLA_SRCDIR` environment variable with QupZilla's source directory. For instance, if QupZilla was cloned in `~/workspace/` in Linux:
 
-    $ export QUPZILLA_SRCDIR=/home/joseriosneto/workspace/qupzilla/
+The easiest way as [other plugins](https://github.com/QupZilla/qupzilla-plugins) is to copy the plugin directory into QupZilla's source tree (eg. into src/plugins).
 
-If you have installed `libQupZilla.*` in a custom directory (or if you are using Mac OSX) you also need to specify this path in the `QUPZILLA_LIBDIR` environment variable. For instance, if QupZilla was cloned in `~/workspace/` in Mac OSX:
+For building outside QupZilla's tree you need to export the `QUPZILLA_SRCDIR` environment variable with QupZilla's source directory. For instance, if QupZilla was cloned in `~/workspace/` in Linux:
 
-    $ export QUPZILLA_LIBDIR=/Users/joseriosneto/workspace/qupzilla/bin/
+    $ export QUPZILLA_SRCDIR=$HOME/workspace/qupzilla/
 
 Then you can compile running these commands:
 
