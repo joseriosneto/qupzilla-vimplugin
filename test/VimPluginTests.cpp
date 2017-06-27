@@ -550,7 +550,6 @@ void VimPluginTests::TabIterationOnShiftJK()
 
     int initial_tab_count = 1;
     int initial_tab = 0;
-    const WebView *web_view = m_browser_window->weView();
     TabWidget* tab_widget = m_browser_window->tabWidget();
 
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
@@ -561,14 +560,13 @@ void VimPluginTests::TabIterationOnShiftJK()
     QTRY_COMPARE(tab_widget->normalTabsCount(), expected_tab_count);
     QTRY_COMPARE(tab_widget->currentIndex(), initial_tab);
 
-    key_event.simulate(web_view->parentWidget());
+    key_event.simulate(m_browser_window->weView()->parentWidget());
     QTRY_COMPARE(tab_widget->currentIndex(), expected_current_tab);
 }
 
 void VimPluginTests::CloseCurTabOnLowerCaseX()
 {
     int initial_tab_count = 1;
-    const WebView *web_view = m_browser_window->weView();
     TabWidget* tab_widget = m_browser_window->tabWidget();
 
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
@@ -576,7 +574,7 @@ void VimPluginTests::CloseCurTabOnLowerCaseX()
             Qz::NT_CleanSelectedTabAtTheEnd);
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count + 1);
 
-    QTest::keyClick(web_view->parentWidget(), 'x');
+    QTest::keyClick(m_browser_window->weView()->parentWidget(), 'x');
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
 }
 
