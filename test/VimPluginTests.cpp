@@ -334,7 +334,7 @@ void VimPluginTests::ScrollNavigationWithHJKL()
     setPagePosition(1000, 1000);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    key_event.simulate(web_view->parentWidget());
+    key_event.simulate(web_view->focusProxy());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
 
     QTRY_COMPARE(web_view->page()->scrollPosition().x(), expected_pos.x());
@@ -383,7 +383,7 @@ void VimPluginTests::ScrollToTopWithDoubleLowerCaseG()
     setPagePosition(100, 4000);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    key_event.simulate(web_view->parentWidget());
+    key_event.simulate(web_view->focusProxy());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
     QTRY_COMPARE(web_view->page()->scrollPosition().x(), expected_pos.x());
     QTRY_COMPARE(web_view->page()->scrollPosition().y(), expected_pos.y());
@@ -420,7 +420,7 @@ void VimPluginTests::ScrollToBottomWithCapitalG()
     QTRY_VERIFY(scroll_height != page_y_offset + window_height);
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    QTest::keyClick(web_view->parentWidget(), 'G');
+    QTest::keyClick(web_view->focusProxy(), 'G');
     QTRY_COMPARE(spy.count(), VimEngine::numSteps());
     QCOMPARE(web_view->page()->scrollPosition().x(), qreal(initial_x));
 
@@ -466,7 +466,7 @@ void VimPluginTests::ScrollHalfViewportUpWithLowerCaseU()
     int scroll_step_size = (viewport_size.height() / 2) / VimEngine::numSteps();
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    key_event.simulate(web_view->parentWidget());
+    key_event.simulate(web_view->focusProxy());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
 
     QTRY_COMPARE(web_view->page()->scrollPosition().x(), initial_x);
@@ -508,7 +508,7 @@ void VimPluginTests::ScrollHalfViewportDownWithLowerCaseD()
     int scroll_step_size = (viewport_size.height() / 2) / VimEngine::numSteps();
 
     QSignalSpy spy(m_vim_plugin->vimEngine().scrollTimer(), SIGNAL(timeout()));
-    key_event.simulate(web_view->parentWidget());
+    key_event.simulate(web_view->focusProxy());
     QTRY_COMPARE(spy.count(), expected_scroll_steps);
 
     QTRY_COMPARE(web_view->page()->scrollPosition().x(), initial_x);
@@ -523,7 +523,7 @@ void VimPluginTests::ReloadPageWithLowerCaseR()
     setPagePosition(100, 100);
 
     QSignalSpy spy(web_view, SIGNAL(loadStarted()));
-    QTest::keyClick(web_view->parentWidget(), 'r');
+    QTest::keyClick(web_view->focusProxy(), 'r');
     QTRY_COMPARE(spy.count(), 1);
 }
 
@@ -560,7 +560,7 @@ void VimPluginTests::TabIterationOnShiftJK()
     QTRY_COMPARE(tab_widget->normalTabsCount(), expected_tab_count);
     QTRY_COMPARE(tab_widget->currentIndex(), initial_tab);
 
-    key_event.simulate(m_browser_window->weView()->parentWidget());
+    key_event.simulate(m_browser_window->weView()->focusProxy());
     QTRY_COMPARE(tab_widget->currentIndex(), expected_current_tab);
 }
 
@@ -574,7 +574,7 @@ void VimPluginTests::CloseCurTabOnLowerCaseX()
             Qz::NT_CleanSelectedTabAtTheEnd);
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count + 1);
 
-    QTest::keyClick(m_browser_window->weView()->parentWidget(), 'x');
+    QTest::keyClick(m_browser_window->weView()->focusProxy(), 'x');
     QTRY_COMPARE(tab_widget->normalTabsCount(), initial_tab_count);
 }
 
@@ -587,7 +587,7 @@ void VimPluginTests::StopScrollingWhenPageIsClosed()
             Qz::NT_CleanSelectedTabAtTheEnd);
     QTRY_COMPARE(tab_widget->normalTabsCount(), 2);
 
-    QTest::keyPress(m_browser_window->weView(1)->parentWidget(), 'j');
+    QTest::keyPress(m_browser_window->weView(1)->focusProxy(), 'j');
     tab_widget->requestCloseTab(1);
     QTRY_VERIFY(!m_vim_plugin->vimEngine().scrollTimer()->isActive());
 }
@@ -606,14 +606,14 @@ void VimPluginTests::RestoreClosedTabOnCapitalX()
     QTRY_COMPARE(loadSpy.count(), 1);
 
     /* Using "requestCloseTab" instead of
-     * "keyClick(m_browser_window->weView(1)->parentWidget(), 'x')" to avoid any
+     * "keyClick(m_browser_window->weView(1)->focusProxy(), 'x')" to avoid any
      * flaw on 'x' feature break this test.
      */
     QSignalSpy changedSpy(tab_widget, SIGNAL(changed()));
     tab_widget->requestCloseTab(1);
     QTRY_VERIFY(changedSpy.count() >= 1);
 
-    QTest::keyClick(m_browser_window->weView()->parentWidget(), 'X');
+    QTest::keyClick(m_browser_window->weView()->focusProxy(), 'X');
     QTRY_COMPARE(tab_widget->normalTabsCount(), 2);
     QTRY_COMPARE(m_browser_window->weView(1)->page()->url(), url_test_page);
 }
