@@ -61,8 +61,8 @@ void VimPlugin::init(InitState state, const QString &settingsPath)
     connect(mApp->plugins(), SIGNAL(webPageDeleted(WebPage *)),
         &m_vim_engine, SLOT(stopScrollingIfPageWasDeleted(WebPage *)));
 
-    QZ_REGISTER_EVENT_HANDLER(PluginProxy::KeyPressHandler);
-    QZ_REGISTER_EVENT_HANDLER(PluginProxy::KeyReleaseHandler);
+    mApp->plugins()->registerAppEventHandler(PluginProxy::KeyPressHandler, this);
+    mApp->plugins()->registerAppEventHandler(PluginProxy::KeyReleaseHandler, this);
 }
 
 bool VimPlugin::testPlugin()
