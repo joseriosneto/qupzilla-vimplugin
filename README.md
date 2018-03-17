@@ -1,9 +1,6 @@
 # Vim Plugin for QupZilla
 How awesome is [Vimium](https://github.com/philc/vimium)? This plugin try to port its functionalities to [QupZilla](https://github.com/QupZilla/qupzilla).
 
-#### NOTE:
-There's a [bug](https://bugreports.qt.io/browse/QTBUG-61621) in qtwebengine 5.9 and 5.9.1 that breaks this plugin. The easiest solution for this is using a version of qtwebengine that doesn't have this bug, ie, 5.8 and >= 5.9.2.
-
 # Compiling
 
 The easiest way as the other [plugins](https://github.com/QupZilla/qupzilla-plugins) is to copy the plugin directory to QupZilla's source tree (ie, in qupzilla/src/plugins) and compile the browser.
